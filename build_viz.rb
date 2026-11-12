@@ -410,13 +410,50 @@ File.open("#{OUT}/sce_cellcycle_candidates.tsv", 'w', encoding: 'UTF-8') do |f|
   cand_rows.each { |r| f.puts r.join("\t") }
 end
 
-genes = ix.flat_map { |x| x[:src] + x[:tgt] }.uniq.to_h do |g|
-  rel, hs = HUMAN[g]
-  [g, { orf: orf[g], rel: rel, human: hs || [] }]
+genes = ix.flat_map { |x| x[:src] + x[:tgt] }.uniq.to_h { |g| [g, { id: orf[g] }] }
+ix.each { |x| x[:refs].each { |q| q[:checked] = q[:pmid] ? 'pmid' : (q[:url] ? 'cite' : nil) } }
+
+# ---- human ----
+require 'uri'
+require_relative 'hsa_data'
+hfields = %w[id module source_genes source_orfs target_genes target_orfs interaction_type description_ja
+             pmids references pmid_verified_via kgml_hsa04110]
+hix = []
+hrows = []
+[[HSA_BASE, 'HSA-CC-%03d', ''], [HSA_NEW, 'HSA-CC-N%02d', '（追加候補）']].each do |list, fmt, suffix|
+  list.each_with_index do |(mod, src, tgt, type, ja, en, refs, ph), i|
+    id = format(fmt, i + 1)
+    refs = refs.map do |q|
+      url = q[:url] || (q[:pmid] ? nil : "https://pubmed.ncbi.nlm.nih.gov/?term=#{URI.encode_www_form_component(q[:label])}")
+      { label: q[:label], pmid: q[:pmid], url: url, checked: q[:checked]&.to_s }
+    end
+    hix << { id: id, module: mod, src: src, tgt: tgt, type: type, cls: classify(type),
+             desc: { ja: ja, en: en }, refs: refs, ph: ph }
+    n = refs.count { |q| q[:checked] }
+    via = if n == refs.size then 'WebSearch（PMIDまたは書誌を確認）'
+          elsif n.zero? then '未確認（書誌は記憶による）'
+          else "一部確認（#{n}/#{refs.size}件）"
+          end
+    hrows << [id, mod, src.join('|'), src.join('|'), tgt.join('|'), tgt.join('|'), type, ja + suffix,
+              refs.filter_map { |q| q[:pmid] }.join(';'),
+              refs.map { |q| q[:label] + (q[:checked] ? '' : ' [未確認]') }.join('; '), via, '未照合']
+  end
 end
+File.open("#{OUT}/hsa_cellcycle_interactions.tsv", 'w', encoding: 'UTF-8') do |f|
+  f.puts hfields.join("\t")
+  hrows.each { |q| f.puts q.join("\t") }
+end
+hgenes = hix.flat_map { |x| x[:src] + x[:tgt] }.uniq.to_h { |g| [g, {}] }
+
 raise 'translation count mismatch' unless BASE_EN.size == base.size && NEW_EN.size == NEW.size && DISEASE_EN.keys.sort == DISEASE.keys.sort
-data = { phases: { ja: PHASES, en: PHASES_EN }, genes: genes,
-         disease: DISEASE.to_h { |k, v| [k, { ja: v, en: DISEASE_EN.fetch(k) }] }, ix: ix }
+disease = DISEASE.to_h { |k, v| [k, { ja: v, en: DISEASE_EN.fetch(k) }] }
+HSA_DISEASE.each { |k, (ja, en)| disease[k] = { ja: ja, en: en } }
+map = HUMAN.merge('CLB5' => ['f', %w[CCNA2]]).select { |g, _| genes.key?(g) }.transform_values { |rel, hs| { rel: rel, human: hs } }
+data = { phases: { sce: { ja: PHASES, en: PHASES_EN }, hsa: HSA_PHASES, cmp: CMP_PHASES },
+         sce: { genes: genes, ix: ix }, hsa: { genes: hgenes, ix: hix }, map: map, disease: disease }
 html = File.read("#{OUT}/viewer_template.html", encoding: 'UTF-8')
 File.write("#{OUT}/cellcycle_timeline.html", html.sub('/*DATA*/null') { JSON.generate(data) }, encoding: 'UTF-8')
-warn "#{ix.size} interactions (#{cand_rows.size} new), #{genes.size} genes, #{genes.count { |_, v| v[:human].any? }} with human counterpart"
+linked = map.values.flat_map { |v| v[:human] }.uniq
+warn "yeast: #{ix.size} interactions, #{genes.size} genes / human: #{hix.size} interactions (#{HSA_NEW.size} added), #{hgenes.size} genes"
+warn "human genes in the yeast map but absent from the human set: #{(linked - hgenes.keys).sort.join(' ')}"
+warn "refs: #{hix.sum { |x| x[:refs].count { |q| q[:pmid] } }} with PMID, #{hix.sum { |x| x[:refs].count { |q| q[:checked] == 'cite' } }} citation-checked, #{hix.sum { |x| x[:refs].count { |q| q[:checked].nil? } }} unchecked"

@@ -3,16 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>出芽酵母 細胞周期タイムライン</title>
+<title>細胞周期タイムライン（酵母・ヒト）</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* Layout idea: one time-ordered matrix. Columns = interactions in order of occurrence,
-   rows = genes in order of first appearance; a bar per row spans its active window. Detail pane at right. */
+   rows = genes (or yeast-human gene groups) in order of first appearance; a bar per row spans its active window.
+   Detail pane at right. Species are told apart by two dedicated hues, effects by four semantic hues. */
 :root {
   --bg: #f4f6f8; --panel: #ffffff; --ink: #18222d; --muted: #5d6b79; --line: #d5dce3;
   --bar: #c9d3dd; --band-a: #eef2f6; --band-b: #f8fafb; --accent: #0b6e8a; --accent-soft: #dceff4;
-  --act: #1f8a55; --inh: #c4442a; --mod: #3565b0; --bind: #6a7582; --mark: #b7791f; --disease: #a8327a;
+  --act: #1f8a55; --inh: #c4442a; --mod: #3565b0; --bind: #6a7582; --disease: #a8327a;
+  --sce: #b7791f; --hsa: #6b4fbb;
   --display: "IBM Plex Sans JP", "Hiragino Sans", "Noto Sans JP", sans-serif;
   --body: "IBM Plex Sans JP", "Hiragino Sans", "Noto Sans JP", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -21,62 +23,70 @@
   :root:not([data-theme="light"]) {
     --bg: #11171d; --panel: #18212a; --ink: #e4eaf0; --muted: #93a1af; --line: #2c3945;
     --bar: #3a4a5a; --band-a: #1c2630; --band-b: #18212a; --accent: #4fb6d1; --accent-soft: #17343d;
-    --act: #4cc38a; --inh: #f0795f; --mod: #7aa5ea; --bind: #9aa6b3; --mark: #e0a94a; --disease: #e07ab8;
-    color-scheme: dark;
+    --act: #4cc38a; --inh: #f0795f; --mod: #7aa5ea; --bind: #9aa6b3; --disease: #e07ab8;
+    --sce: #e0a94a; --hsa: #a892ee; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #11171d; --panel: #18212a; --ink: #e4eaf0; --muted: #93a1af; --line: #2c3945;
   --bar: #3a4a5a; --band-a: #1c2630; --band-b: #18212a; --accent: #4fb6d1; --accent-soft: #17343d;
-  --act: #4cc38a; --inh: #f0795f; --mod: #7aa5ea; --bind: #9aa6b3; --mark: #e0a94a; --disease: #e07ab8;
-  color-scheme: dark;
+  --act: #4cc38a; --inh: #f0795f; --mod: #7aa5ea; --bind: #9aa6b3; --disease: #e07ab8;
+  --sce: #e0a94a; --hsa: #a892ee; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.6;
   display: flex; flex-direction: column; }
-header { padding: 14px 20px 10px; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--line); background: var(--panel); }
+header { padding: 12px 20px 10px; display: flex; flex-direction: column; gap: 7px; border-bottom: 1px solid var(--line); background: var(--panel); }
 .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 h1 { font-family: var(--display); font-size: 19px; font-weight: 700; margin: 0; letter-spacing: .01em; }
-.lede { margin: 0; color: var(--muted); font-size: 13px; max-width: 76ch; }
-.controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.lede { margin: 0; color: var(--muted); font-size: 13px; max-width: 78ch; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; flex: none; }
-.seg button { font: inherit; font-size: 13px; padding: 4px 11px; border: 0; background: var(--panel); color: var(--ink); cursor: pointer; border-right: 1px solid var(--line); }
+.seg button { font: inherit; font-size: 13px; padding: 4px 11px; border: 0; background: var(--panel); color: var(--ink); cursor: pointer; border-right: 1px solid var(--line); white-space: nowrap; }
 .seg button:last-child { border-right: 0; }
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); font-weight: 600; }
-#q { font: inherit; font-size: 13px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); width: 250px; }
+.seg.sub button { font-size: 12px; padding: 3px 9px; }
+#q { font: inherit; font-size: 13px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); width: 230px; }
 button:focus-visible, #q:focus-visible, a:focus-visible, .col:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); align-items: center; }
+.legend { display: flex; flex-wrap: wrap; gap: 3px 14px; font-size: 12px; color: var(--muted); align-items: center; }
 .legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .legend svg { flex: none; }
+[hidden] { display: none !important; }
 main { flex: 1; min-height: 0; display: flex; }
-.scroller { flex: 1; min-width: 0; overflow: auto; display: grid; grid-template-columns: 172px max-content; grid-template-rows: 42px max-content; background: var(--panel); align-content: start; }
+.scroller { flex: 1; min-width: 0; overflow: auto; display: grid; grid-template-columns: var(--labw, 180px) max-content; grid-template-rows: max-content max-content; background: var(--panel); align-content: start; }
 .corner { position: sticky; top: 0; left: 0; z-index: 3; background: var(--panel); border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
   font-size: 11px; color: var(--muted); padding: 4px 8px; display: flex; flex-direction: column; justify-content: flex-end; line-height: 1.35; }
-.colhead { position: sticky; top: 0; z-index: 2; background: var(--panel); border-bottom: 1px solid var(--line); }
+.colhead { position: sticky; top: 0; z-index: 2; background: var(--panel); border-bottom: 1px solid var(--line); line-height: 0; }
 .rowlabs { position: sticky; left: 0; z-index: 1; background: var(--panel); border-right: 1px solid var(--line); }
-.rowlab { display: flex; align-items: center; gap: 6px; width: 100%; height: 20px; padding: 0 8px; border: 0; background: none; color: var(--ink);
-  font: 500 12px/1 var(--mono); cursor: pointer; text-align: left; white-space: nowrap; }
-.rowlab .hs { font-weight: 400; color: var(--muted); font-size: 11px; margin-left: auto; }
+.rowlab { display: flex; align-items: center; gap: 5px; width: 100%; height: 20px; padding: 0 8px 0 6px; border: 0; background: none; color: var(--ink);
+  font: 500 12px/1 var(--mono); cursor: pointer; text-align: left; white-space: nowrap; overflow: hidden; }
+.rowlab .nm { overflow: hidden; text-overflow: ellipsis; }
+.rowlab .hs { font-weight: 400; color: var(--muted); font-size: 11px; margin-left: auto; overflow: hidden; text-overflow: ellipsis; padding-left: 6px; }
 .dz { display: inline-block; width: 6px; height: 6px; border-radius: 1px; background: var(--disease); flex: none; }
+.sp { display: inline-flex; gap: 1px; flex: none; }
+.sp i { width: 3px; height: 12px; border-radius: 1px; background: var(--line); }
+.sp i.sce { background: var(--sce); } .sp i.hsa { background: var(--hsa); }
 .rowlab:hover, .rowlab.hot { background: var(--accent-soft); }
 .rowlab.sel { background: var(--accent); color: var(--panel); }
 .rowlab.sel .hs { color: var(--panel); }
-.rowlab.match { box-shadow: inset 3px 0 0 var(--mark); }
+.rowlab.match { box-shadow: inset 0 -2px 0 var(--accent); }
 svg text { font-family: var(--body); fill: var(--ink); }
 .col { cursor: pointer; }
 .col.dim { opacity: .16; }
 .col .hit { fill: transparent; }
 .col:hover .hit { fill: var(--accent); fill-opacity: .1; }
 .col.sel .hit { fill: var(--accent); fill-opacity: .22; }
-aside { width: 360px; flex: none; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 16px 18px 28px; }
-aside h2 { font-family: var(--display); font-size: 16px; margin: 0 0 2px; line-height: 1.4; text-wrap: balance; }
+.col.cp .hit { fill: var(--accent); fill-opacity: .12; }
+aside { width: 370px; flex: none; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 16px 18px 28px; }
+aside h2 { font-family: var(--display); font-size: 16px; margin: 0 0 2px; line-height: 1.4; text-wrap: balance; overflow-wrap: anywhere; }
 aside h3 { font-size: 12px; font-weight: 600; color: var(--muted); margin: 16px 0 5px; letter-spacing: .04em; }
 aside p { margin: 0 0 6px; }
 .gene { font-family: var(--mono); font-weight: 600; }
 .pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); margin-right: 5px; white-space: nowrap; }
 .pill.act { border-color: var(--act); color: var(--act); } .pill.inh { border-color: var(--inh); color: var(--inh); }
 .pill.mod { border-color: var(--mod); color: var(--mod); } .pill.bind { border-color: var(--bind); color: var(--bind); }
+.pill.sce { background: var(--sce); border-color: var(--sce); color: var(--panel); } .pill.hsa { background: var(--hsa); border-color: var(--hsa); color: var(--panel); }
 .meta { color: var(--muted); font-size: 12px; }
 aside ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
 aside li { padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
@@ -88,7 +98,7 @@ aside a { color: var(--accent); }
 @media (max-width: 860px) {
   main { flex-direction: column; }
   aside { width: auto; border-left: 0; border-top: 1px solid var(--line); max-height: 45%; }
-  .scroller { grid-template-columns: 124px max-content; }
+  .scroller { --labw: 130px !important; }
   .rowlab .hs { display: none; }
 }
 </style>
@@ -104,20 +114,34 @@ aside a { color: var(--accent); }
   </div>
   <p class="lede" data-t="lede"></p>
   <div class="controls">
-    <input id="q" type="search">
-    <div class="legend">
-      <span><svg width="12" height="12"><circle cx="6" cy="6" r="4" fill="var(--ink)"/></svg><b data-t="lgSrc" style="font-weight:400"></b></span>
-      <span><svg width="12" height="12"><path d="M6 1.5 10.5 10h-9z" fill="var(--act)"/></svg><b data-t="act" style="font-weight:400"></b></span>
-      <span><svg width="12" height="12"><rect x="1" y="4" width="10" height="4" fill="var(--inh)"/></svg><b data-t="inh" style="font-weight:400"></b></span>
-      <span><svg width="12" height="12"><path d="M6 1 11 6 6 11 1 6z" fill="var(--mod)"/></svg><b data-t="mod" style="font-weight:400"></b></span>
-      <span><svg width="12" height="12"><circle cx="6" cy="6" r="3.6" fill="none" stroke="var(--bind)" stroke-width="2"/></svg><b data-t="bind" style="font-weight:400"></b></span>
-      <span><svg width="8" height="12"><rect x="1" y="3" width="6" height="6" rx="1" fill="var(--disease)"/></svg><b data-t="lgDz" style="font-weight:400"></b></span>
+    <div class="seg" role="group" id="modes">
+      <button type="button" data-mode="sce" data-t="mSce"></button>
+      <button type="button" data-mode="hsa" data-t="mHsa"></button>
+      <button type="button" data-mode="cmp" data-t="mCmp"></button>
     </div>
+    <div class="seg sub" role="group" id="cmpf">
+      <button type="button" data-cf="all" data-t="fAll"></button>
+      <button type="button" data-cf="both" data-t="fBoth"></button>
+      <button type="button" data-cf="sce" data-t="fSce"></button>
+      <button type="button" data-cf="hsa" data-t="fHsa"></button>
+    </div>
+    <input id="q" type="search">
+  </div>
+  <div class="legend">
+    <span><svg width="12" height="12"><circle cx="6" cy="6" r="4" fill="var(--ink)"/></svg><b data-t="lgSrc" style="font-weight:400"></b></span>
+    <span><svg width="12" height="12"><path d="M6 1.5 10.5 10h-9z" fill="var(--act)"/></svg><b data-t="act" style="font-weight:400"></b></span>
+    <span><svg width="12" height="12"><rect x="1" y="4" width="10" height="4" fill="var(--inh)"/></svg><b data-t="inh" style="font-weight:400"></b></span>
+    <span><svg width="12" height="12"><path d="M6 1 11 6 6 11 1 6z" fill="var(--mod)"/></svg><b data-t="mod" style="font-weight:400"></b></span>
+    <span><svg width="12" height="12"><circle cx="6" cy="6" r="3.6" fill="none" stroke="var(--bind)" stroke-width="2"/></svg><b data-t="bind" style="font-weight:400"></b></span>
+    <span><svg width="8" height="12"><rect x="1" y="3" width="6" height="6" rx="1" fill="var(--disease)"/></svg><b data-t="lgDz" style="font-weight:400"></b></span>
+    <span class="cmponly"><svg width="14" height="12"><rect x="1" y="1" width="12" height="10" rx="2" fill="var(--sce)"/></svg><b data-t="lgSce" style="font-weight:400"></b></span>
+    <span class="cmponly"><svg width="14" height="12"><rect x="1" y="1" width="12" height="10" rx="2" fill="var(--hsa)"/></svg><b data-t="lgHsa" style="font-weight:400"></b></span>
+    <span class="cmponly"><svg width="14" height="12"><rect x="1.5" y="1.5" width="11" height="9" rx="2" fill="none" stroke="var(--muted)"/></svg><b data-t="lgOnly" style="font-weight:400"></b></span>
   </div>
 </header>
 <main>
   <div class="scroller" id="scroller">
-    <div class="corner"><span data-t="cornerA"></span><span data-t="cornerB"></span></div>
+    <div class="corner"><span id="cornerA"></span><span id="cornerB"></span></div>
     <div class="colhead" id="colhead"></div>
     <div class="rowlabs" id="rowlabs"></div>
     <div id="body"></div>
@@ -128,56 +152,96 @@ aside a { color: var(--accent); }
 const D = /*DATA*/null;
 const T = {
   ja: {
-    title: '出芽酵母 細胞周期タイムライン',
-    lede: '列は相互作用を起きる順に、行は遺伝子を登場順に並べています。横棒はその遺伝子が関わる期間、縦線は1つの相互作用で、丸が作用する側、印が受ける側です。列か遺伝子名を選ぶと根拠論文とヒトでの対応が右に出ます。',
+    title: '細胞周期タイムライン（酵母・ヒト）',
+    lede: '列は相互作用を起きる順に、行は遺伝子を登場順に並べています。横棒はその遺伝子が関わる期間、縦線は1つの相互作用で、丸が作用する側、印が受ける側です。「比較」では対応する酵母とヒトの遺伝子を同じ行にまとめ、両方の相互作用を同じ時間軸に並べます。',
+    mSce: '酵母', mHsa: 'ヒト', mCmp: '比較',
+    fAll: 'すべて', fBoth: '両方にある', fSce: '酵母のみ', fHsa: 'ヒトのみ',
     search: '遺伝子名で探す（例: WHI5, RB1）',
-    lgSrc: '作用する側', act: '活性化', inh: '抑制・分解', mod: '修飾', bind: '結合', lgDz: 'ヒト対応遺伝子に疾患メモあり',
-    cornerA: '酵母遺伝子', cornerB: 'ヒト対応（≈ は機能的）',
+    lgSrc: '作用する側', act: '活性化', inh: '抑制・分解', mod: '修飾', bind: '結合', lgDz: 'ヒト遺伝子に疾患メモあり',
+    lgSce: '酵母の相互作用', lgHsa: 'ヒトの相互作用', lgOnly: '枠だけ: 他方に対応が見つからない',
+    corner: { sce: ['酵母遺伝子', 'ヒト対応（≈ は機能的）'], hsa: ['ヒト遺伝子', '酵母対応（≈ は機能的）'], cmp: ['ヒト遺伝子', '酵母遺伝子'] },
+    sp: { sce: '酵母', hsa: 'ヒト' },
     count: n => `${n}件`, range: (a, b) => `${a} から ${b}`,
-    pick: '列か遺伝子名を選んでください', showing: (c, r) => `相互作用 ${c}件、遺伝子 ${r}個を表示中。`,
-    what: '反応の内容', refs: '根拠論文', noRef: 'PMID未確認', noLink: '（リンク未取得）', yeast: '酵母遺伝子',
-    human: 'ヒトでの対応と疾患・バリアント', none: 'ヒトでの対応は未割り当て', ortho: 'オーソログ', func: '機能的な対応',
-    gene: '遺伝子', involved: n => `関わる相互作用（${n}件、起きる順）`,
-    foot: '時期の割り当て、ヒトでの対応、疾患メモは手作業の暫定値です。オーソログDBと変異DBの照会に置き換える前提で作っています。',
+    pick: '列か遺伝子名を選んでください', showing: (c, r) => `相互作用 ${c}件、${r}行を表示中。`,
+    what: '反応の内容', refs: '根拠論文', unchecked: '書誌未確認', searchLink: 'PubMedで検索',
+    genes: '遺伝子', human: 'ヒトでの対応と疾患・バリアント', yeastOf: '酵母での対応', none: '対応は未割り当て', ortho: 'オーソログ', func: '機能的な対応',
+    cp: '他方の生物種で対応する相互作用', noCp: '対応する相互作用は見つかっていません。',
+    gene: '遺伝子', group: '対応する遺伝子のグループ', involved: n => `関わる相互作用（${n}件、起きる順）`,
+    foot: '時期の割り当て、酵母とヒトの対応、疾患メモは手作業の暫定値です。「対応する相互作用」は、作用する側と受ける側がそれぞれ同じ行に入るものを機械的に拾っています。',
     headAria: '細胞周期の時期と相互作用の列', bodyAria: '遺伝子と相互作用のマトリクス'
   },
   en: {
-    title: 'Budding yeast cell-cycle timeline',
-    lede: 'Columns are interactions in the order they occur; rows are genes in order of first appearance. A horizontal bar spans the period a gene is involved. Each vertical line is one interaction: a dot marks the acting side, a symbol the receiving side. Select a column or a gene name to see the supporting papers and the human counterparts on the right.',
+    title: 'Cell-cycle timeline (yeast and human)',
+    lede: 'Columns are interactions in the order they occur; rows are genes in order of first appearance. A horizontal bar spans the period a gene is involved. Each vertical line is one interaction: a dot marks the acting side, a symbol the receiving side. Compare puts corresponding yeast and human genes on one row and lays both sets of interactions on the same time axis.',
+    mSce: 'Yeast', mHsa: 'Human', mCmp: 'Compare',
+    fAll: 'All', fBoth: 'In both', fSce: 'Yeast only', fHsa: 'Human only',
     search: 'Find a gene (e.g. WHI5, RB1)',
-    lgSrc: 'Acting side', act: 'Activation', inh: 'Inhibition / degradation', mod: 'Modification', bind: 'Binding', lgDz: 'Human counterpart has a disease note',
-    cornerA: 'Yeast gene', cornerB: 'Human (≈ functional)',
+    lgSrc: 'Acting side', act: 'Activation', inh: 'Inhibition / degradation', mod: 'Modification', bind: 'Binding', lgDz: 'Human gene has a disease note',
+    lgSce: 'Yeast interaction', lgHsa: 'Human interaction', lgOnly: 'Outline only: no counterpart found in the other species',
+    corner: { sce: ['Yeast gene', 'Human (≈ functional)'], hsa: ['Human gene', 'Yeast (≈ functional)'], cmp: ['Human gene', 'Yeast gene'] },
+    sp: { sce: 'Yeast', hsa: 'Human' },
     count: n => `${n}`, range: (a, b) => `${a} through ${b}`,
-    pick: 'Select a column or a gene name', showing: (c, r) => `Showing ${c} interactions among ${r} genes.`,
-    what: 'Reaction', refs: 'Supporting papers', noRef: 'PMID not confirmed', noLink: '(no link yet)', yeast: 'Yeast genes',
-    human: 'Human counterparts, disease and variants', none: 'no human counterpart assigned', ortho: 'orthologue', func: 'functional counterpart',
-    gene: 'Gene', involved: n => `Interactions involving this gene (${n}, in order)`,
-    foot: 'Phase assignments, human counterparts and disease notes are provisional and hand-curated, to be replaced by queries to orthology and variant databases.',
+    pick: 'Select a column or a gene name', showing: (c, r) => `Showing ${c} interactions on ${r} rows.`,
+    what: 'Reaction', refs: 'Supporting papers', unchecked: 'citation not checked', searchLink: 'search PubMed',
+    genes: 'Genes', human: 'Human counterparts, disease and variants', yeastOf: 'Yeast counterparts', none: 'no counterpart assigned', ortho: 'orthologue', func: 'functional counterpart',
+    cp: 'Corresponding interactions in the other species', noCp: 'No corresponding interaction found.',
+    gene: 'Gene', group: 'Group of corresponding genes', involved: n => `Interactions involving this row (${n}, in order)`,
+    foot: 'Phase assignments, yeast-human correspondences and disease notes are provisional and hand-curated. Corresponding interactions are picked mechanically: the acting and receiving sides must each fall on the same rows.',
     headAria: 'Cell-cycle phases and interaction columns', bodyAria: 'Matrix of genes and interactions'
   }
 };
-const CW = 17, RH = 20, HH = 42;
+const CW = 17, RH = 20;
 const NS = 'http://www.w3.org/2000/svg';
-const state = { lang: 'ja', sel: null, q: '' };
+const state = { lang: 'ja', mode: 'cmp', cf: 'all', sel: null, q: '' };
 try { const l = localStorage.getItem('cc-lang'); if (l === 'en' || l === 'ja') state.lang = l; } catch (e) {}
-let cols = [], rows = [], rowIdx = {};
 const t = () => T[state.lang];
-
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const el = (n, a = {}, parent) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (parent) parent.appendChild(e); return e; };
-const members = x => [...x.src, ...x.tgt];
-const hsLabel = g => { const i = D.genes[g]; return i.human.length ? (i.rel === 'f' ? '≈ ' : '') + i.human.join('/') : ''; };
-const hasDisease = g => D.genes[g].human.some(h => D.disease[h]);
-const phase = i => D.phases[state.lang][i];
 
+/* ---- data preparation ---- */
+const IX = [...D.sce.ix.map(x => ({ ...x, sp: 'sce' })), ...D.hsa.ix.map(x => ({ ...x, sp: 'hsa' }))];
+const BYID = Object.fromEntries(IX.map(x => [x.id, x]));
+const members = x => [...x.src, ...x.tgt];
+const REV = {};   // human symbol -> [{g, rel}]
+for (const g in D.map) for (const h of D.map[g].human) (REV[h] ||= []).push({ g, rel: D.map[g].rel });
+// groups of corresponding genes (connected components over the yeast-human map, restricted to genes in the data)
+const parent = {};
+const find = k => (parent[k] === k ? k : (parent[k] = find(parent[k])));
+for (const g in D.sce.genes) parent['sce:' + g] = 'sce:' + g;
+for (const h in D.hsa.genes) parent['hsa:' + h] = 'hsa:' + h;
+for (const g in D.map) if (D.sce.genes[g]) for (const h of D.map[g].human) if (D.hsa.genes[h]) parent[find('sce:' + g)] = find('hsa:' + h);
+const GROUP = {};  // root -> {sce:[], hsa:[]}
+for (const k in parent) { const r = find(k), [sp, g] = k.split(':'); (GROUP[r] ||= { key: r, sce: [], hsa: [] })[sp].push(g); }
+const gkey = (sp, g) => find(sp + ':' + g);
+const shared = k => GROUP[k].sce.length && GROUP[k].hsa.length;
+// corresponding interactions across species
+IX.forEach(x => { x.gs = new Set(x.src.map(g => gkey(x.sp, g)).filter(shared)); x.gt = new Set(x.tgt.map(g => gkey(x.sp, g)).filter(shared)); x.cp = []; });
+const meets = (a, b) => { for (const k of a) if (b.has(k)) return true; return false; };
+for (const a of IX) if (a.sp === 'sce') for (const b of IX) if (b.sp === 'hsa' && meets(a.gs, b.gs) && meets(a.gt, b.gt)) { a.cp.push(b.id); b.cp.push(a.id); }
+
+const rowKey = x => g => (state.mode === 'cmp' ? gkey(x.sp, g) : g);
+const rowKeys = x => members(x).map(rowKey(x));
+const phase = (i, sp) => D.phases[state.mode === 'cmp' ? 'cmp' : (sp || state.mode)][state.lang][i];
+const rel = r => (r === 'f' ? '≈ ' : '');
+function rowInfo(k) {
+  if (state.mode === 'sce') { const m = D.map[k]; return { name: k, sub: m ? rel(m.rel) + m.human.join('/') : '', dz: !!m && m.human.some(h => D.disease[h]), sce: [k], hsa: [] }; }
+  if (state.mode === 'hsa') { const r = REV[k] || []; return { name: k, sub: r.length ? rel(r[0].rel) + r.map(o => o.g).join('/') : '', dz: !!D.disease[k], sce: [], hsa: [k] }; }
+  const g = GROUP[k];
+  return { name: g.hsa.length ? g.hsa.join('/') : g.sce.join('/'), sub: g.hsa.length ? g.sce.join('/') : '', dz: g.hsa.some(h => D.disease[h]), sce: g.sce, hsa: g.hsa };
+}
+
+let cols = [], rows = [], rowIdx = {};
 function layout() {
-  cols = D.ix.map((x, i) => [x, i]).sort((a, b) => a[0].ph[0] - b[0].ph[0] || a[1] - b[1]).map(a => a[0]);
+  const pool = IX.filter(x => state.mode === 'cmp'
+    ? (state.cf === 'all' || (state.cf === 'both' ? x.cp.length : x.sp === state.cf && !x.cp.length))
+    : x.sp === state.mode);
+  const spo = { sce: 0, hsa: 1 };
+  cols = pool.map((x, i) => [x, i]).sort((a, b) => a[0].ph[0] - b[0].ph[0] || spo[a[0].sp] - spo[b[0].sp] || a[1] - b[1]).map(a => a[0]);
   const span = {};
-  cols.forEach((x, c) => members(x).forEach(g => { (span[g] ||= [c, c])[1] = c; }));
-  // an interaction that lasts several phases stretches the bars of its members to the end of that phase
-  cols.forEach(x => { if (x.ph[1] > x.ph[0]) { let last = 0; cols.forEach((y, c) => { if (y.ph[0] <= x.ph[1]) last = c; }); members(x).forEach(g => { span[g][1] = Math.max(span[g][1], last); }); } });
-  rows = Object.keys(span).sort((a, b) => span[a][0] - span[b][0] || span[a][1] - span[b][1]).map(g => ({ g, from: span[g][0], to: span[g][1] }));
-  rowIdx = {}; rows.forEach((r, i) => { rowIdx[r.g] = i; });
+  cols.forEach((x, c) => rowKeys(x).forEach(k => { (span[k] ||= [c, c])[1] = c; }));
+  cols.forEach(x => { if (x.ph[1] > x.ph[0]) { let last = 0; cols.forEach((y, c) => { if (y.ph[0] <= x.ph[1]) last = c; }); rowKeys(x).forEach(k => { span[k][1] = Math.max(span[k][1], last); }); } });
+  rows = Object.keys(span).sort((a, b) => span[a][0] - span[b][0] || span[a][1] - span[b][1]).map(k => ({ k, from: span[k][0], to: span[k][1], ...rowInfo(k) }));
+  rowIdx = {}; rows.forEach((r, i) => { rowIdx[r.k] = i; });
 }
 
 function mark(g, cls, x, y) {
@@ -187,140 +251,184 @@ function mark(g, cls, x, y) {
   if (cls === 'mod') return el('path', { d: `M${x} ${y - 5.5} ${x + 5.5} ${y} ${x} ${y + 5.5} ${x - 5.5} ${y}z`, fill: c }, g);
   return el('circle', { cx: x, cy: y, r: 3.8, fill: 'var(--panel)', stroke: c, 'stroke-width': 2 }, g);
 }
+const colLabel = x => `${x.src.join('+')} → ${x.tgt.join('+')} (${x.type})`;
 
 function render() {
+  const L = t(), cmp = state.mode === 'cmp';
   document.documentElement.lang = state.lang;
-  document.title = t().title;
-  document.querySelectorAll('[data-t]').forEach(n => { n.textContent = t()[n.dataset.t]; });
-  const q = document.getElementById('q'); q.placeholder = t().search; q.setAttribute('aria-label', t().search);
+  document.title = L.title;
+  document.querySelectorAll('[data-t]').forEach(n => { n.textContent = L[n.dataset.t]; });
+  const q = document.getElementById('q'); q.placeholder = L.search; q.setAttribute('aria-label', L.search);
   document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === state.lang));
+  document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === state.mode));
+  document.querySelectorAll('[data-cf]').forEach(b => b.setAttribute('aria-pressed', b.dataset.cf === state.cf));
+  document.getElementById('cmpf').hidden = !cmp;
+  document.querySelectorAll('.cmponly').forEach(n => { n.hidden = !cmp; });
+  document.getElementById('cornerA').textContent = L.corner[state.mode][0];
+  document.getElementById('cornerB').textContent = L.corner[state.mode][1];
+  document.getElementById('scroller').style.setProperty('--labw', cmp ? '236px' : '180px');
 
   layout();
-  const W = cols.length * CW + 10, H = rows.length * RH + 6;
+  const HH = cmp ? 58 : 42;
+  const W = Math.max(cols.length * CW + 10, 200), H = rows.length * RH + 6;
   const groups = []; cols.forEach((x, c) => { const p = x.ph[0]; const g = groups[groups.length - 1]; if (g && g.p === p) g.to = c; else groups.push({ p, from: c, to: c }); });
 
-  const head = el('svg', { width: W, height: HH, role: 'img', 'aria-label': t().headAria });
+  const head = el('svg', { width: W, height: HH, role: 'img', 'aria-label': L.headAria });
   groups.forEach((g, i) => {
     const x0 = g.from * CW, w = (g.to - g.from + 1) * CW;
     el('rect', { x: x0, y: 0, width: w, height: HH, fill: i % 2 ? 'var(--band-b)' : 'var(--band-a)' }, head);
-    const a = el('text', { x: x0 + 6, y: 17, 'font-size': 12, 'font-weight': 600 }, head); a.textContent = phase(g.p);
-    const n = el('text', { x: x0 + 6, y: 32, 'font-size': 10.5, style: 'fill:var(--muted)' }, head); n.textContent = t().count(g.to - g.from + 1);
+    if (w >= 60) {
+      el('text', { x: x0 + 6, y: 17, 'font-size': 12, 'font-weight': 600 }, head).textContent = phase(g.p);
+      el('text', { x: x0 + 6, y: 32, 'font-size': 10.5, style: 'fill:var(--muted)' }, head).textContent = L.count(g.to - g.from + 1);
+    }
+  });
+  if (cmp) cols.forEach((x, c) => {
+    const cx = c * CW + CW / 2, on = x.cp.length > 0;
+    el('rect', { x: cx - 6.5, y: 40, width: 13, height: 13, rx: 2.5, fill: on ? `var(--${x.sp})` : 'var(--panel)', stroke: `var(--${x.sp})`, 'stroke-width': 1.2 }, head);
   });
 
-  const body = el('svg', { width: W, height: H, role: 'img', 'aria-label': t().bodyAria });
+  const body = el('svg', { width: W, height: H, role: 'img', 'aria-label': L.bodyAria });
   groups.forEach((g, i) => el('rect', { x: g.from * CW, y: 0, width: (g.to - g.from + 1) * CW, height: H, fill: i % 2 ? 'var(--band-b)' : 'var(--band-a)' }, body));
-  rows.forEach((r, i) => {
-    el('rect', { x: r.from * CW + 3, y: i * RH + RH / 2 - 3.5, width: (r.to - r.from) * CW + CW - 6, height: 7, rx: 3.5, fill: 'var(--bar)' }, body);
-  });
+  rows.forEach((r, i) => el('rect', { x: r.from * CW + 3, y: i * RH + RH / 2 - 3.5, width: (r.to - r.from) * CW + CW - 6, height: 7, rx: 3.5, fill: 'var(--bar)' }, body));
   cols.forEach((x, c) => {
-    const label = `${x.src.join('+')} → ${x.tgt.join('+')} (${x.type})`;
-    const g = el('g', { class: 'col', 'data-id': x.id, tabindex: 0, role: 'button', 'aria-label': label }, body);
-    const cx = c * CW + CW / 2, ys = members(x).map(m => rowIdx[m] * RH + RH / 2);
+    const g = el('g', { class: 'col', 'data-id': x.id, tabindex: 0, role: 'button', 'aria-label': colLabel(x) }, body);
+    const cx = c * CW + CW / 2, rk = rowKey(x), y = m => rowIdx[rk(m)] * RH + RH / 2, ys = members(x).map(y);
     el('rect', { class: 'hit', x: c * CW, y: 0, width: CW, height: H }, g);
     el('line', { x1: cx, x2: cx, y1: Math.min(...ys), y2: Math.max(...ys), stroke: `var(--${x.cls})`, 'stroke-width': 1.6 }, g);
-    x.src.forEach(m => el('circle', { cx, cy: rowIdx[m] * RH + RH / 2, r: 4.2, fill: 'var(--ink)' }, g));
-    x.tgt.forEach(m => mark(g, x.cls, cx, rowIdx[m] * RH + RH / 2));
-    el('title', {}, g).textContent = label;
+    x.tgt.forEach(m => mark(g, x.cls, cx, y(m)));
+    x.src.forEach(m => el('circle', { cx, cy: y(m), r: 4.2, fill: 'var(--ink)' }, g));
+    el('title', {}, g).textContent = (cmp ? `[${L.sp[x.sp]}] ` : '') + colLabel(x);
   });
 
   document.getElementById('colhead').replaceChildren(head);
   document.getElementById('body').replaceChildren(body);
   document.getElementById('rowlabs').innerHTML = rows.map(r =>
-    `<button type="button" class="rowlab" data-g="${r.g}">${hasDisease(r.g) ? '<span class="dz"></span>' : ''}<span>${r.g}</span><span class="hs">${esc(hsLabel(r.g))}</span></button>`).join('');
+    `<button type="button" class="rowlab" data-k="${esc(r.k)}">${cmp ? `<span class="sp"><i class="${r.hsa.length ? 'hsa' : ''}"></i><i class="${r.sce.length ? 'sce' : ''}"></i></span>` : ''}${r.dz ? '<span class="dz"></span>' : ''}<span class="nm">${esc(r.name)}</span><span class="hs">${esc(r.sub)}</span></button>`).join('');
   paint();
 }
 
 function paint() {
   const s = state.sel, q = state.q.trim().toUpperCase();
-  const colOn = x => !s || s.kind === 'ix' || members(x).includes(s.id);
+  const selIx = s && s.kind === 'ix' ? BYID[s.id] : null;
   document.querySelectorAll('.col').forEach(n => {
-    const x = D.ix.find(i => i.id === n.dataset.id);
-    n.classList.toggle('dim', !colOn(x)); n.classList.toggle('sel', !!s && s.kind === 'ix' && s.id === x.id);
+    const x = BYID[n.dataset.id];
+    n.classList.toggle('dim', !!s && s.kind === 'row' && !rowKeys(x).includes(s.id));
+    n.classList.toggle('sel', !!selIx && selIx.id === x.id);
+    n.classList.toggle('cp', !!selIx && selIx.cp.includes(x.id));
   });
-  const selIx = s && s.kind === 'ix' ? D.ix.find(i => i.id === s.id) : null;
+  const hot = selIx ? new Set(rowKeys(selIx)) : new Set();
   document.querySelectorAll('.rowlab').forEach(n => {
-    const g = n.dataset.g;
-    n.classList.toggle('sel', !!s && s.kind === 'gene' && s.id === g);
-    n.classList.toggle('hot', !!selIx && members(selIx).includes(g));
-    n.classList.toggle('match', !!q && (g.includes(q) || D.genes[g].human.some(h => h.includes(q))));
+    const r = rows[rowIdx[n.dataset.k]];
+    n.classList.toggle('sel', !!s && s.kind === 'row' && s.id === r.k);
+    n.classList.toggle('hot', hot.has(r.k));
+    n.classList.toggle('match', !!q && [...r.sce, ...r.hsa, r.sub].some(v => v.toUpperCase().includes(q)));
   });
   detail();
 }
 
+/* ---- detail pane ---- */
 function refHtml(r) {
-  const href = r.pmid ? `https://pubmed.ncbi.nlm.nih.gov/${r.pmid}/` : r.url;
-  const tail = r.pmid ? ` <span class="meta">PMID ${r.pmid}</span>` : '';
-  return `<li>${href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(r.label)}</a>` : `${esc(r.label)} <span class="meta">${t().noLink}</span>`}${tail}</li>`;
+  const L = t(), href = r.pmid ? `https://pubmed.ncbi.nlm.nih.gov/${r.pmid}/` : r.url;
+  const isSearch = !r.pmid && r.url && r.url.includes('pubmed.ncbi.nlm.nih.gov/?term=');
+  const tail = r.pmid ? ` <span class="meta">PMID ${r.pmid}</span>` : (isSearch ? ` <span class="meta">${L.searchLink}</span>` : '');
+  const flag = r.checked ? '' : ` <span class="meta">・${L.unchecked}</span>`;
+  return `<li>${href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(r.label)}</a>` : esc(r.label)}${tail}${flag}</li>`;
 }
-function humanHtml(g) {
-  const i = D.genes[g];
-  if (!i.human.length) return `<li><span class="gene">${g}</span> <span class="meta">${t().none}</span></li>`;
-  return i.human.map(h => `<li><span class="gene">${g}</span> ${i.rel === 'f' ? '≈' : '→'} <span class="gene">${h}</span> <span class="meta">${i.rel === 'f' ? t().func : t().ortho}</span>
-    ${D.disease[h] ? `<p style="margin:3px 0 4px"><span class="dz" style="margin-right:5px"></span>${esc(D.disease[h][state.lang])}</p>` : ''}
-    <div class="links"><a href="https://www.ncbi.nlm.nih.gov/clinvar/?term=${h}%5Bgene%5D" target="_blank" rel="noopener">ClinVar</a>
-    <a href="https://grch38.togovar.org/?mode=simple&term=${h}" target="_blank" rel="noopener">TogoVar</a>
-    <a href="https://www.alliancegenome.org/search?q=${h}" target="_blank" rel="noopener">Alliance</a>
-    <a href="https://www.ncbi.nlm.nih.gov/gene/?term=${h}%5Bsym%5D+AND+human%5Borgn%5D" target="_blank" rel="noopener">NCBI Gene</a></div></li>`).join('');
+const hsLinks = h => `<div class="links"><a href="https://www.ncbi.nlm.nih.gov/clinvar/?term=${h}%5Bgene%5D" target="_blank" rel="noopener">ClinVar</a>
+  <a href="https://grch38.togovar.org/?mode=simple&term=${h}" target="_blank" rel="noopener">TogoVar</a>
+  <a href="https://www.alliancegenome.org/search?q=${h}" target="_blank" rel="noopener">Alliance</a>
+  <a href="https://www.ncbi.nlm.nih.gov/gene/?term=${h}%5Bsym%5D+AND+human%5Borgn%5D" target="_blank" rel="noopener">NCBI Gene</a></div>`;
+const dzHtml = h => (D.disease[h] ? `<p style="margin:3px 0 4px"><span class="dz" style="margin-right:5px"></span>${esc(D.disease[h][state.lang])}</p>` : '');
+const relName = r => (r === 'f' ? t().func : t().ortho);
+function yeastGeneHtml(g) {   // a yeast gene with its human counterparts
+  const m = D.map[g], id = D.sce.genes[g] ? D.sce.genes[g].id : '';
+  const sgd = id ? ` <a href="https://www.yeastgenome.org/locus/${id}" target="_blank" rel="noopener">${id}</a>` : '';
+  if (!m) return `<li><span class="gene">${g}</span>${sgd} <span class="meta">・${t().none}</span></li>`;
+  return m.human.map(h => `<li><span class="gene">${g}</span>${sgd} ${m.rel === 'f' ? '≈' : '→'} <span class="gene">${h}</span> <span class="meta">${relName(m.rel)}</span>${dzHtml(h)}${hsLinks(h)}</li>`).join('');
 }
-const phaseText = x => x.ph[0] === x.ph[1] ? phase(x.ph[0]) : t().range(phase(x.ph[0]), phase(x.ph[1]));
+function humanGeneHtml(h) {   // a human gene with its yeast counterparts
+  const r = REV[h] || [];
+  const ys = r.length ? r.map(o => `${o.rel === 'f' ? '≈' : '←'} <a href="https://www.yeastgenome.org/locus/${D.sce.genes[o.g] ? D.sce.genes[o.g].id : o.g}" target="_blank" rel="noopener"><span class="gene">${o.g}</span></a> <span class="meta">${relName(o.rel)}</span>`).join('、 ') : `<span class="meta">${t().yeastOf}: ${t().none}</span>`;
+  return `<li><span class="gene">${h}</span> ${ys}${dzHtml(h)}${hsLinks(h)}</li>`;
+}
+const geneList = (sp, gs) => gs.map(g => (sp === 'sce' ? yeastGeneHtml(g) : humanGeneHtml(g))).join('');
+const phaseText = x => (x.ph[0] === x.ph[1] ? phase(x.ph[0], x.sp) : t().range(phase(x.ph[0], x.sp), phase(x.ph[1], x.sp)));
+const ixBtn = x => `<li><button type="button" class="ixbtn" data-ix="${x.id}"><span class="pill ${x.sp}">${t().sp[x.sp]}</span><span class="gene">${x.src.join('+')}</span> → <span class="gene">${x.tgt.join('+')}</span><br><span class="meta">${phase(x.ph[0], x.sp)} ・ ${esc(x.type)}</span></button></li>`;
 
 function detail() {
   const box = document.getElementById('detail'), s = state.sel, L = t();
   const foot = `<p class="note">${L.foot}</p>`;
   if (!s) { box.innerHTML = `<h2>${L.pick}</h2><p class="meta">${L.showing(cols.length, rows.length)}</p>${foot}`; return; }
   if (s.kind === 'ix') {
-    const x = D.ix.find(i => i.id === s.id), gs = members(x);
+    const x = BYID[s.id];
     box.innerHTML = `<p class="meta">${esc(x.module)}</p>
       <h2><span class="gene">${x.src.join(' + ')}</span> → <span class="gene">${x.tgt.join(' + ')}</span></h2>
-      <p style="margin-top:6px"><span class="pill ${x.cls}">${L[x.cls]}</span></p>
+      <p style="margin-top:6px"><span class="pill ${x.sp}">${L.sp[x.sp]}</span><span class="pill ${x.cls}">${L[x.cls]}</span></p>
       <p class="meta">${esc(x.type)} ・ ${phaseText(x)}</p>
       <h3>${L.what}</h3><p>${esc(x.desc[state.lang])}</p>
-      <h3>${L.refs}</h3><ul>${x.refs.map(refHtml).join('') || `<li class="meta">${L.noRef}</li>`}</ul>
-      <h3>${L.yeast}</h3><div class="links">${gs.map(g => `<a href="https://www.yeastgenome.org/locus/${D.genes[g].orf}" target="_blank" rel="noopener"><span class="gene">${g}</span> ${D.genes[g].orf}</a>`).join('')}</div>
-      <h3>${L.human}</h3><ul>${gs.map(humanHtml).join('')}</ul>${foot}`;
+      <h3>${L.refs}</h3><ul>${x.refs.map(refHtml).join('')}</ul>
+      <h3>${L.cp}</h3>${x.cp.length ? `<ul>${x.cp.map(id => ixBtn(BYID[id])).join('')}</ul>` : `<p class="meta">${L.noCp}</p>`}
+      <h3>${x.sp === 'sce' ? L.human : L.genes}</h3><ul>${geneList(x.sp, members(x))}</ul>${foot}`;
   } else {
-    const g = s.id, i = D.genes[g], list = cols.filter(x => members(x).includes(g));
-    box.innerHTML = `<p class="meta">${L.gene}</p><h2><span class="gene">${g}</span> <span class="meta">${i.orf}</span></h2>
-      <div class="links"><a href="https://www.yeastgenome.org/locus/${i.orf}" target="_blank" rel="noopener">SGD</a>
-      <a href="https://www.kegg.jp/entry/sce:${i.orf}" target="_blank" rel="noopener">KEGG</a>
-      <a href="https://www.alliancegenome.org/search?q=${i.orf}" target="_blank" rel="noopener">Alliance</a></div>
-      <h3>${L.human}</h3><ul>${humanHtml(g)}</ul>
-      <h3>${L.involved(list.length)}</h3>
-      <ul>${list.map(x => `<li><button type="button" class="ixbtn" data-ix="${x.id}"><span class="gene">${x.src.join('+')}</span> → <span class="gene">${x.tgt.join('+')}</span><br><span class="meta">${phase(x.ph[0])} ・ ${esc(x.type)}</span></button></li>`).join('')}</ul>${foot}`;
+    const r = rows[rowIdx[s.id]], list = cols.filter(x => rowKeys(x).includes(s.id));
+    const single = r.sce.length + r.hsa.length === 1;
+    box.innerHTML = `<p class="meta">${single ? L.gene : L.group}</p><h2><span class="gene">${esc(r.name)}</span>${r.sub && state.mode === 'cmp' ? ` <span class="meta">・</span> <span class="gene">${esc(r.sub)}</span>` : ''}</h2>
+      ${r.hsa.length ? `<h3>${L.sp.hsa}</h3><ul>${geneList('hsa', r.hsa)}</ul>` : ''}
+      ${r.sce.length ? `<h3>${L.sp.sce}</h3><ul>${geneList('sce', r.sce)}</ul>` : ''}
+      <h3>${L.involved(list.length)}</h3><ul>${list.map(ixBtn).join('')}</ul>${foot}`;
   }
 }
 
+/* ---- interaction ---- */
+function scrollTo(kind, id) {
+  const sc = document.getElementById('scroller');
+  if (kind === 'ix') { const c = cols.findIndex(x => x.id === id); if (c >= 0) sc.scrollLeft = Math.max(0, c * CW - sc.clientWidth / 3); }
+  else if (rowIdx[id] != null) sc.scrollTop = Math.max(0, rowIdx[id] * RH - sc.clientHeight / 3);
+}
 function select(kind, id, scroll) {
   state.sel = state.sel && state.sel.kind === kind && state.sel.id === id ? null : { kind, id };
   paint();
   document.getElementById('detail').scrollTop = 0;
-  if (scroll && state.sel) {
-    const sc = document.getElementById('scroller');
-    if (kind === 'ix') { const c = cols.findIndex(x => x.id === id); if (c >= 0) sc.scrollLeft = Math.max(0, c * CW - sc.clientWidth / 3); }
-    else if (rowIdx[id] != null) sc.scrollTop = Math.max(0, rowIdx[id] * RH - sc.clientHeight / 3);
-  }
+  if (scroll && state.sel) scrollTo(kind, id);
 }
-
+function keepSelection() {
+  const s = state.sel; if (!s) return;
+  if (s.kind === 'ix' ? !cols.some(x => x.id === s.id) : rowIdx[s.id] == null) state.sel = null;
+}
 document.getElementById('body').addEventListener('click', e => { const c = e.target.closest('.col'); if (c) select('ix', c.dataset.id); });
 document.getElementById('body').addEventListener('keydown', e => { const c = e.target.closest('.col'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); select('ix', c.dataset.id); } });
-document.getElementById('rowlabs').addEventListener('click', e => { const b = e.target.closest('.rowlab'); if (b) select('gene', b.dataset.g); });
-document.getElementById('detail').addEventListener('click', e => { const b = e.target.closest('.ixbtn'); if (b) { state.sel = null; select('ix', b.dataset.ix, true); } });
+document.getElementById('rowlabs').addEventListener('click', e => { const b = e.target.closest('.rowlab'); if (b) select('row', b.dataset.k); });
+document.getElementById('detail').addEventListener('click', e => {
+  const b = e.target.closest('.ixbtn'); if (!b) return;
+  const x = BYID[b.dataset.ix];
+  if (!cols.includes(x)) { if (state.mode !== 'cmp') state.mode = 'cmp'; state.cf = 'all'; state.sel = null; render(); }
+  state.sel = null; select('ix', x.id, true);
+});
 document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => {
   state.lang = b.dataset.lang;
   try { localStorage.setItem('cc-lang', state.lang); } catch (e) {}
   const sc = document.getElementById('scroller'), x = sc.scrollLeft, y = sc.scrollTop;
   render(); sc.scrollLeft = x; sc.scrollTop = y;
 }));
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
+  if (state.sel && state.sel.kind === 'row') state.sel = null;
+  state.mode = b.dataset.mode; layout(); keepSelection(); render();
+  const sc = document.getElementById('scroller'); sc.scrollLeft = 0; sc.scrollTop = 0;
+  if (state.sel) scrollTo('ix', state.sel.id);
+}));
+document.querySelectorAll('[data-cf]').forEach(b => b.addEventListener('click', () => { state.cf = b.dataset.cf; layout(); keepSelection(); render(); }));
 const q = document.getElementById('q');
 q.addEventListener('input', () => { state.q = q.value; paint(); });
 q.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const k = q.value.trim().toUpperCase(); if (!k) return;
-  const hit = rows.find(r => r.g === k) || rows.find(r => D.genes[r.g].human.includes(k)) || rows.find(r => r.g.includes(k) || D.genes[r.g].human.some(h => h.includes(k)));
-  if (hit) { state.sel = null; select('gene', hit.g, true); }
+  const names = r => [...r.sce, ...r.hsa];
+  const hit = rows.find(r => names(r).includes(k)) || rows.find(r => r.sub.toUpperCase().split(/[\/ ≈]+/).includes(k)) || rows.find(r => [...names(r), r.sub].some(v => v.toUpperCase().includes(k)));
+  if (hit) { state.sel = null; select('row', hit.k, true); }
 });
 
-state.sel = { kind: 'ix', id: D.ix[1].id };
+const first = IX.find(x => x.sp === 'hsa' && x.cp.length);
+state.sel = first ? { kind: 'ix', id: first.id } : null;
 render();
 </script>
 </body>
