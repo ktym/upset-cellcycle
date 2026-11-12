@@ -49,7 +49,7 @@ NEW = [
   ['G1/Start', %w[YDJ1 SSA1], %w[CLN3], 'activation (release)',
    'シャペロンYdj1/Ssa1がCln3の放出と核移行を助ける。保持・放出の分子実体は見直しが進行中。',
    [ref('Vergés et al. 2007 Mol Cell 26:649'),
-    ref('Aldea研 2019', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC6467244/')], 'B', [0, 0]],
+    ref('Aldea lab 2019', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC6467244/')], 'B', [0, 0]],
   ['G1/Start', %w[CDC48], %w[CLN3], 'activation (release)',
    'Cdc48がCln3の放出に関わる。',
    [ref('Parisi et al. 2018', pmid: '29950310')], 'B', [0, 0]],
@@ -132,11 +132,11 @@ NEW = [
    [ref('Primorac et al. 2013 eLife 2:e01030', url: 'https://elifesciences.org/articles/01030')], 'A', [4, 4]],
   ['M (SAC)', %w[MPS1], %w[BUB1], 'phosphorylation/activation',
    'キネトコア上のBub1もMps1でリン酸化され、Mad1-Mad2が結合できるようになる。',
-   [ref('London & Biggins 2014; Moyle et al. 2014（Aravamudhan et al. 2016での引用）',
+   [ref('London & Biggins 2014; Moyle et al. 2014 (cited in Aravamudhan et al. 2016)',
         url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC5221577/')], 'B', [4, 4]],
   ['M (SAC)', %w[BUB1], %w[MAD1], 'binding (recruitment)',
    'リン酸化Bub1がMad1-Mad2を呼び込む。',
-   [ref('London & Biggins 2014; Moyle et al. 2014（Aravamudhan et al. 2016での引用）',
+   [ref('London & Biggins 2014; Moyle et al. 2014 (cited in Aravamudhan et al. 2016)',
         url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC5221577/')], 'B', [4, 4]],
   ['M (SAC)', %w[IPL1 SLI15], %w[MAD2], 'activation (indirect)',
    'Ipl1/Aurora Bが張力のない接着を不安定化し、SACを点灯させる。キネトコア経由の間接効果。',
@@ -153,21 +153,21 @@ NEW = [
    [ref('Enquist-Newman et al. 2008', pmid: '18498748')], 'A', [5, 5]],
   ['SPOC', %w[KIN4], %w[BFA1], 'phosphorylation/activation',
    '紡錘体位置がずれるとKin4がBfa1をリン酸化し、Cdc5による抑制性リン酸化を受けないようにする。',
-   [ref('Maekawa et al. 2007; Caydasi & Pereira 2009（eLife 72833の整理）',
+   [ref('Maekawa et al. 2007; Caydasi & Pereira 2009 (as summarized in eLife 72833)',
         url: 'https://elifesciences.org/articles/72833')], 'B', [5, 5]],
   ['SPOC', %w[LTE1], %w[KIN4], 'inhibition',
    '芽側でLte1がKin4を娘側SPBから遠ざけ、Tem1を活性化させる。',
-   [ref('Bertazzi et al. 2011; Falk et al. 2011（総説での引用）',
+   [ref('Bertazzi et al. 2011; Falk et al. 2011 (cited in review)',
         url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7185974/')], 'B', [5, 5]],
   ['SPOC', %w[GLC7 BUD14], %w[BFA1], 'dephosphorylation/activation',
    'Glc7-Bud14がBfa1を脱リン酸化してSPOCのエフェクターを完全に活性化する。',
    [ref('eLife 72833', url: 'https://elifesciences.org/articles/72833')], 'B', [5, 5]],
   ['Mitotic exit (MEN)', %w[CDC15], %w[NUD1], 'phosphorylation',
    'Cdc15がSPBスキャフォールドNud1をリン酸化し、Dbf2-Mob1のドッキング部位を作る。',
-   [ref('Rock et al. 2013（総説での引用）', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7185974/')], 'A', [6, 6]],
+   [ref('Rock et al. 2013 (cited in review)', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7185974/')], 'A', [6, 6]],
   ['Mitotic exit (MEN)', %w[NUD1], %w[DBF2 MOB1], 'binding (recruitment)',
    'リン酸化Nud1がDbf2-Mob1をSPBに呼び、Cdc15による活性化を可能にする。',
-   [ref('Rock et al. 2013（総説での引用）', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7185974/')], 'A', [6, 6]],
+   [ref('Rock et al. 2013 (cited in review)', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7185974/')], 'A', [6, 6]],
   ['Mitotic exit (MEN)', %w[DBF2 MOB1], %w[CDC14], 'phosphorylation',
    'Dbf2-Mob1がCdc14のNLS近傍をリン酸化してNLSを無効化し、細胞質に留める。',
    [ref('Mohl et al. 2009 JCB 184:527', pmid: '19221193')], 'A', [6, 6]],
@@ -225,6 +225,138 @@ DISEASE = {
   'PTTG1' => '下垂体腫瘍などで過剰発現'
 }.freeze
 
+
+PHASES_EN = ['M/G1 to G1', 'Start (G1/S)', 'S phase', 'G2/M', 'Metaphase (SAC)', 'Anaphase', 'Mitotic exit'].freeze
+
+BASE_EN = [
+  'Cln3 forms a complex with Cdc28 and activates the kinase (the study also analysed Cln1/2/3 complexes and binding of Far1 and Fus3).',
+  'Cln3-Cdc28 phosphorylates Whi5, driving its dissociation from SBF/MBF and its nuclear export.',
+  'Whi5 binds SBF at promoters and represses G1/S transcription.',
+  'Pcl9-Pho85 also phosphorylates Whi5 and blocks its association with HDACs (Hos3/Rpd3).',
+  'Formation of the Swi4-Swi6 complex (SBF). The Swi4 C-terminus is required for Swi6 association.',
+  'Identification of the Mbp1-Swi6 complex (MBF). The mbp1 swi4 double mutant is lethal.',
+  'SBF (Swi4) directly activates transcription of CLN1/CLN2 (and PCL1/HCS26).',
+  'CLB5/CLB6 are transcribed in late G1 in a Cln-dependent manner (MBF targets).',
+  'Far1 directly inhibits Cdc28-Cln kinase activity.',
+  'Phosphorylation of Far1 by Cln-Cdc28 triggers its SCF-Cdc4-dependent degradation.',
+  'Sic1 inhibits Clb-Cdc28 and controls the G1/S transition.',
+  'Phosphorylation of Sic1 by G1 CDK (three sites) is required for its degradation and S-phase entry.',
+  'SCF(Cdc4) with Cdc34 ubiquitinates phosphorylated Sic1 (reconstituted system).',
+  'SCF(Grr1) with Rbx1 (Hrt1) ubiquitinates phosphorylated Cln1.',
+  'Pho80-Pho85 phosphorylates Pho4, causing its nuclear export and inactivation.',
+  'The CDK inhibitor Pho81 inactivates Pho80-Pho85 under low phosphate.',
+  'Cell-cycle control by the cyclin Hcs26 (Pcl1)-Pho85 complex.',
+  'Cak1 phosphorylates Cdc28 on T169 (the physiological CAK of budding yeast).',
+  'On DNA damage, Swi6 is phosphorylated in a Rad53-dependent manner and CLN1/2 transcription is repressed.',
+  'Cdc6 interacts physically and functionally with ORC and sets the frequency of replication initiation.',
+  'The Cdc4/34/53 pathway degrades Cdc6 through its N-terminus.',
+  'Tah11/Sid2 identified as the Cdt1 orthologue, involved in Mcm2-7 loading.',
+  'Cdc7-Dbf4 binds and phosphorylates Mcm2 (G1/S).',
+  'Cell-cycle regulation of Cdc7 kinase through association with Dbf4.',
+  'Phosphorylation of Sld2/Sld3 by S-CDK induces their binding to Dpb11 and replication initiation.',
+  'Rad53 phosphorylates Sld3 and Dbf4 and blocks firing of late origins.',
+  'Mcm1-Fkh2 recruits Ndd1 to promoters of G2/M genes (CLB2 cluster).',
+  'Phosphorylation of Ndd1 T319 by Clb-Cdc28 is required for binding to the Fkh2 FHA domain (positive feedback).',
+  'Clb2 promotes CLB expression and represses SBF targets (CLN1/2); Swi4 is a substrate of Clb2-Cdc28.',
+  'The Wee1 homologue Swe1 negatively regulates Cdc28 (acting differentially on G2 cyclin complexes).',
+  'Hsl1 and Hsl7 promote Swe1 degradation (Hsl7-Swe1 complex).',
+  'Cla4 and Cdc5 sequentially phosphorylate and inactivate Swe1.',
+  'Clb2-Cdc28 phosphorylates Swe1, priming Cdc5-dependent hyperphosphorylation and degradation.',
+  'Mad1/2/3 bind Cdc20; checkpoint-resistant Cdc20 mutants lose the binding.',
+  'A tight Mad1-Mad2 complex is essential for checkpoint function.',
+  'Mad3 interacts with Bub3, Cdc20 and Mad2.',
+  'Pds1 is degraded in an APC-dependent manner to control anaphase onset; Cdc20 is required for Pds1 degradation.',
+  'Formation of the Pds1-Esp1 complex. The APC degrades Pds1 and frees Esp1.',
+  'Esp1 cleaves Scc1/Mcd1 and separates sister chromatids.',
+  'Cdc5 phosphorylates Scc1 near its cleavage sites and enhances cleavage.',
+  'Phosphorylation by Cdc28 activates APC-Cdc20.',
+  'Chk1 maintains Pds1 levels; Rad53 blocks anaphase entry and mitotic exit through Cdc5.',
+  'As above (Rad53-Cdc5 branch).',
+  'Mec1 and Tel1 control Rad53 phosphorylation on DNA damage.',
+  'Phosphorylated Rad9 binds the FHA domains of Rad53.',
+  'Mrc1 mediates Rad53 activation under replication stress.',
+  'Hct1/Cdh1 controls Clb2 degradation (APC).',
+  'Phosphorylation of Hct1 by CDK blocks its binding to the APC.',
+  'Cdc14 dephosphorylates and activates Hct1.',
+  'Cdc14 dephosphorylates Sic1 and Swi5, promoting CDK inactivation.',
+  'SIC1 is transcribed in late mitosis in a Swi5-dependent manner.',
+  'Net1 (Cfi1) sequesters and inhibits Cdc14 in the nucleolar RENT complex.',
+  'Cdc14 is released from RENT in late anaphase in a Tem1-dependent manner.',
+  'Cdc15 directly phosphorylates and activates Mob1-bound Dbf2.',
+  'Bub2-Bfa1 is a two-component GAP for Tem1; Bfa1 alone also inhibits Tem1.',
+  'Cdc5 phosphorylates Bfa1 and inhibits its GAP activity.',
+  'The FEAR network promotes Cdc14 release in early anaphase.',
+  'Phosphorylation of Net1 by Clb-CDK underlies Cdc14 release.',
+  'Separase down-regulates PP2A-Cdc55, allowing Net1 phosphorylation.',
+  'Cdc5 physically associates with the FEAR components Esp1 and Slk19 and with Cdc14.',
+  'Yox1/Yhp1 bind Mcm1 and restrict ECB-dependent transcription (CLN3, SWI4, CDC6, MCM) to M/G1.'
+].freeze
+
+NEW_EN = [
+  'Cln3-Cdc28 phosphorylates and inactivates Whi7, a paralogue of Whi5.',
+  'Whi7 binds SBF and represses G1/S transcription; a Start repressor acting in parallel with Whi5.',
+  'Regulation of Whi7 by Pho85. Direction and sites should be checked in the original paper.',
+  'The chaperones Ydj1/Ssa1 help release Cln3 and its nuclear accumulation. The molecular basis of retention and release is under revision.',
+  'Cdc48 takes part in the release of Cln3.',
+  'PP2A-Cdc55 dephosphorylates Whi5 and delays Start. In poor nutrients Rim15-Igo1/2 counteract this.',
+  'Cln3-Cdk1 inhibits Rim15, giving homeostatic control of Whi5 phosphorylation.',
+  'Under osmostress Hog1 phosphorylates Sic1 on T173, which interferes with its ubiquitination and stabilizes it, arresting cells in G1.',
+  'Stb1 binds SBF/MBF through Swi6 and modulates G1/S transcription.',
+  'Msa1/Msa2 bind SBF and MBF and tune the timing of G1/S transcription.',
+  'Cks1 binds Cdc28 and docks on already phosphorylated sites to drive multisite phosphorylation; this underlies the switch-like degradation of Sic1.',
+  'Clb5-Cdc28 uses RxL docking to phosphorylate Sic1, completing the destruction of its own inhibitor.',
+  'Rif1 recruits PP1 (Glc7), reverses DDK phosphorylation of Mcm4 and restrains origin firing.',
+  'Mcm4 and Mcm6 are the essential targets of DDK, as established in the reconstituted system.',
+  'Sld3-Sld7 read DDK-phosphorylated MCM, bind it and bring in Cdc45.',
+  'Mcm10 binds the MCM complex directly and acts in activation of the CMG helicase.',
+  'Rad53 prevents DDK from binding MCM.',
+  'Nrm1, itself an MBF target, binds MBF and shuts off transcription (negative feedback).',
+  'Under replication stress Rad53 phosphorylates Nrm1, releasing it from MBF and keeping G1/S transcription on.',
+  'Acm1 forms a complex with 14-3-3 (Bmh1/2) and inhibits Cdh1 as a pseudosubstrate using its KEN box and D box. Present from late G1 to late M.',
+  'Phosphorylation by Cdc28 is required for Bmh binding and stabilization of Acm1.',
+  'Csa1 (Ypr174c), a substrate carrying the Clb3-specific PxxPxF docking motif.',
+  'Mih1 (Cdc25) removes the inhibitory Y19 phosphorylation placed on Cdc28 by Swe1.',
+  'PP2A-Cdc55 opposes Cdk1 phosphorylation of Swe1 and controls Swe1 activation.',
+  'Zds1/Zds2 bind PP2A-Cdc55, regulate its localization and function, and help mitotic entry.',
+  'Rim15 (Greatwall) phosphorylates Igo1/2 (endosulfines).',
+  'Phosphorylated Igo1/2 inhibit PP2A-Cdc55.',
+  'Hog1 phosphorylates the Hsl7-docking site of Hsl1; Hsl7 leaves the septin ring, Swe1 accumulates and cells arrest in G2.',
+  'At unattached kinetochores Mps1 phosphorylates the MELT motifs of Spc105 (KNL1).',
+  'Bub3 reads phosphorylated MELT directly, bringing Bub3-Bub1 to the kinetochore.',
+  'Kinetochore-bound Bub1 is also phosphorylated by Mps1, which lets Mad1-Mad2 bind.',
+  'Phosphorylated Bub1 recruits Mad1-Mad2.',
+  'Ipl1/Aurora B destabilizes tensionless attachments and switches on the SAC; an indirect effect through the kinetochore.',
+  'Bub1 phosphorylates H2A-S121 and brings Sgo1-PP2A(Rts1) to the pericentromere; it leaves once tension is established.',
+  'PP1 (Glc7) removes MELT phosphorylation and silences the SAC.',
+  'APC/C-Cdc20 degrades Acm1 in anaphase, ordering the activation of Cdh1.',
+  'When the spindle is mispositioned Kin4 phosphorylates Bfa1, shielding it from inhibitory phosphorylation by Cdc5.',
+  'In the bud Lte1 keeps Kin4 off the daughter-bound SPB, allowing Tem1 activation.',
+  'Glc7-Bud14 dephosphorylates Bfa1 to fully activate the SPOC effector.',
+  'Cdc15 phosphorylates the SPB scaffold Nud1, creating a docking site for Dbf2-Mob1.',
+  'Phosphorylated Nud1 recruits Dbf2-Mob1 to the SPB, where Cdc15 activates it.',
+  'Dbf2-Mob1 phosphorylates residues next to the Cdc14 NLS, inactivating it and keeping Cdc14 in the cytoplasm.',
+  'After priming by Cdc5, nucleolar Dbf2-Mob1 phosphorylates Net1 and releases Cdc14.',
+  'Daughter-specific Amn1 binds Tem1, blocks its binding to Cdc15, evicts it from the SPB and promotes its degradation.'
+].freeze
+
+DISEASE_EN = {
+  'RB1' => 'Retinoblastoma; inactivated in many cancers', 'CCND1' => 'Amplified or translocated in many cancers (e.g. mantle cell lymphoma)',
+  'CCNE1' => 'Amplified in ovarian and other cancers', 'CDKN1B' => 'Multiple endocrine neoplasia type 4 (MEN4)',
+  'FBXW7' => 'Tumour suppressor (mutated in T-ALL, colorectal cancer and others)', 'CKS1B' => 'Within the 1q gain region of multiple myeloma',
+  'BUB1B' => 'Mosaic variegated aneuploidy syndrome 1', 'KNL1' => 'Primary microcephaly (MCPH4)',
+  'ATM' => 'Ataxia-telangiectasia; susceptibility to breast and other cancers', 'ATR' => 'Seckel syndrome 1',
+  'CHEK2' => 'Hereditary susceptibility to breast and other cancers', 'RECQL4' => 'Rothmund-Thomson syndrome',
+  'ORC1' => 'Meier-Gorlin syndrome', 'CDC6' => 'Meier-Gorlin syndrome', 'CDT1' => 'Meier-Gorlin syndrome',
+  'MCM4' => 'Immunodeficiency with NK-cell deficiency and adrenal insufficiency', 'RAD21' => 'Cornelia de Lange syndrome 4',
+  'VCP' => 'Inclusion body myopathy with frontotemporal dementia (IBMPFD), ALS', 'CDC14A' => 'Autosomal recessive deafness (DFNB32)',
+  'LATS1' => 'Tumour suppressor of the Hippo pathway', 'STK4' => 'STK4 deficiency (primary immunodeficiency)',
+  'PPP2R5D' => 'Neurodevelopmental disorder with intellectual disability', 'PLK1' => 'Anticancer drug target (PLK1 inhibitors)',
+  'WEE1' => 'Anticancer drug target (WEE1 inhibitors)', 'AURKB' => 'Anticancer drug target (Aurora inhibitors)',
+  'CDC7' => 'Anticancer drug target (CDC7 inhibitors)', 'TTK' => 'Anticancer drug target (MPS1 inhibitors)',
+  'CDK1' => 'Target of CDK inhibitors', 'CDK2' => 'Target of CDK inhibitors', 'CHEK1' => 'Anticancer drug target (CHK1 inhibitors)',
+  'PTTG1' => 'Overexpressed in pituitary and other tumours'
+}.freeze
+
 def classify(type)
   case type
   when /inhibition|repression|ubiquitination|proteolysis/ then 'inh'
@@ -246,23 +378,26 @@ base.each do |r|
 end
 orf.merge!(NEW_ORF) { |_, a, _| a }
 
+prev = nil
 ix = base.map do |r|
   n = r['id'][/\d+\z/].to_i
   pmids = r['pmids'].split(';').reject(&:empty?)
-  labels = r['references'].split(/;\s*/)
+  refs_text = r['references'] == '同上' ? prev : r['references']
+  prev = refs_text
+  labels = refs_text.sub(' [PMID未確認]', ' [PMID unverified]').split(/;\s*/)
   refs = pmids.each_with_index.map { |p, i| ref(labels[i] || "PMID #{p}", pmid: p) }
   refs = labels.map { |l| ref(l) } if refs.empty?
-  { id: r['id'], set: 'base', pri: nil, module: r['module'], src: r['source_genes'].split('|'),
+  { id: r['id'], module: r['module'], src: r['source_genes'].split('|'),
     tgt: r['target_genes'].split('|'), type: r['interaction_type'], cls: classify(r['interaction_type']),
-    desc: r['description_ja'], refs: refs, ph: BASE_PHASE.find { |k, _| k.cover?(n) }[1] }
+    desc: { ja: r['description_ja'], en: BASE_EN.fetch(n - 1) }, refs: refs, ph: BASE_PHASE.find { |k, _| k.cover?(n) }[1] }
 end
 
 cand_rows = []
 NEW.each_with_index do |(mod, src, tgt, type, desc, refs, pri, ph), i|
   id = format('SCE-CC-N%02d', i + 1)
   (src + tgt).each { |g| raise "no ORF for #{g}" unless orf[g] }
-  ix << { id: id, set: 'new', pri: pri, module: mod, src: src, tgt: tgt, type: type, cls: classify(type),
-          desc: desc, refs: refs, ph: ph }
+  ix << { id: id, module: mod, src: src, tgt: tgt, type: type, cls: classify(type),
+          desc: { ja: desc, en: NEW_EN.fetch(i) }, refs: refs, ph: ph }
   cand_rows << [id, mod, src.join('|'), src.map { |g| orf[g] }.join('|'), tgt.join('|'),
                 tgt.map { |g| orf[g] }.join('|'), type, "#{desc}（優先度#{pri}）",
                 refs.filter_map { |r| r[:pmid] }.join(';'),
@@ -279,7 +414,9 @@ genes = ix.flat_map { |x| x[:src] + x[:tgt] }.uniq.to_h do |g|
   rel, hs = HUMAN[g]
   [g, { orf: orf[g], rel: rel, human: hs || [] }]
 end
-data = { phases: PHASES, genes: genes, disease: DISEASE, ix: ix }
+raise 'translation count mismatch' unless BASE_EN.size == base.size && NEW_EN.size == NEW.size && DISEASE_EN.keys.sort == DISEASE.keys.sort
+data = { phases: { ja: PHASES, en: PHASES_EN }, genes: genes,
+         disease: DISEASE.to_h { |k, v| [k, { ja: v, en: DISEASE_EN.fetch(k) }] }, ix: ix }
 html = File.read("#{OUT}/viewer_template.html", encoding: 'UTF-8')
 File.write("#{OUT}/cellcycle_timeline.html", html.sub('/*DATA*/null') { JSON.generate(data) }, encoding: 'UTF-8')
 warn "#{ix.size} interactions (#{cand_rows.size} new), #{genes.size} genes, #{genes.count { |_, v| v[:human].any? }} with human counterpart"
