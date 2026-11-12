@@ -1,0 +1,62 @@
+id	module	source_genes	source_orfs	target_genes	target_orfs	interaction_type	description_ja	pmids	references	pmid_verified_via	kgml_sce04111	kgml_sce04110
+SCE-CC-001	G1/Start	CLN3	YAL040C	CDC28	YBR160W	binding/activation	Cln3はCdc28と複合体を形成しキナーゼを活性化（Cln1/2/3各複合体とFar1・Fus3の結合も解析）	8395009	Tyers M, Futcher B. Mol Cell Biol 13:5659-69 (1993)	BioGRID	未照合	未照合
+SCE-CC-002	G1/Start	CLN3|CDC28	YAL040C|YBR160W	WHI5	YOR083W	phosphorylation/inhibition	Cln3-Cdc28がWhi5をリン酸化し、SBF/MBFからの解離と核外移行を誘導	15210111;15210110	Costanzo M et al. Cell 117:899-913 (2004); de Bruin RA et al. Cell 117:887-98 (2004)	Wikipedia引用/KEGG文献欄	未照合	未照合
+SCE-CC-003	G1/Start	WHI5	YOR083W	SWI4|SWI6	YER111C|YLR182W	inhibition (binding)	Whi5はプロモーター上のSBFに結合しG1/S転写を抑制	15210111;15210110	同上	同上	未照合	未照合
+SCE-CC-004	G1/Start	PHO85|PCL9	YPL031C|YDL179W	WHI5	YOR083W	phosphorylation/inhibition	Pcl9-Pho85もWhi5をリン酸化し、HDAC(Hos3/Rpd3)との会合を阻害	19823668	Huang D et al. PLoS Biol 7:e1000188 (2009)	BioGRID/SciCrunch	未照合	未照合
+SCE-CC-005	G1/Start	SWI4	YER111C	SWI6	YLR182W	binding (complex: SBF)	Swi4–Swi6複合体(SBF)の形成。Swi4 C末端がSwi6会合に必要	8423776	Sidorova J, Breeden L. Mol Cell Biol 13:1069-77 (1993)	PMC	未照合	未照合
+SCE-CC-006	G1/Start	MBP1	YDL056W	SWI6	YLR182W	binding (complex: MBF)	Mbp1–Swi6複合体(MBF)の同定。mbp1 swi4二重欠損は致死	8372350	Koch C et al. Science 261:1551-7 (1993)	BioGRID/PubMed	未照合	未照合
+SCE-CC-007	G1/Start	SWI4|SWI6	YER111C|YLR182W	CLN1|CLN2	YMR199W|YPL256C	expression	SBF(Swi4)がCLN1/CLN2(およびPCL1/HCS26)の転写を直接活性化	1832336	Ogas J, Andrews BJ, Herskowitz I. Cell 66:1015-26 (1991)	BioGRID	未照合	未照合
+SCE-CC-008	G1/Start	MBP1|SWI6	YDL056W|YLR182W	CLB5|CLB6	YPR120C|YGR109C	expression	CLB5/CLB6はG1後期にCln依存的に転写される（MBF標的）	8372350;8319908	Koch C et al. Science (1993); Schwob E, Nasmyth K. Genes Dev 7:1160-75 (1993)	BioGRID	未照合	未照合
+SCE-CC-009	G1/Start	FAR1	YJL157C	CDC28|CLN1|CLN2	YBR160W|YMR199W|YPL256C	inhibition (binding)	Far1がCdc28-Clnキナーゼ活性を直接阻害	8066461;8395009	Peter M, Herskowitz I. Science 265:1228-31 (1994); Tyers & Futcher (1993)	BioGRID	未照合	未照合
+SCE-CC-010	G1/Start	CDC28|CLN2	YBR160W|YPL256C	FAR1	YJL157C	phosphorylation → ubiquitination	Cln-Cdc28によるFar1リン酸化がSCF-Cdc4依存分解を誘導	9367986	Henchoz S et al. Genes Dev 11:3046-60 (1997)	KEGG文献欄	未照合	未照合
+SCE-CC-011	G1/Start	SIC1	YLR079W	CDC28|CLB5|CLB2	YBR160W|YPR120C|YPR119W	inhibition (binding)	Sic1はClb-Cdc28を阻害しG1/S移行を制御	7954792;8421781	Schwob E et al. Cell 79:233-44 (1994); Mendenhall MD. Science 259:216-9 (1993)	KEGG文献欄 / *8421781はScience DOI(science.8421781)からの推定・要確認	未照合	未照合
+SCE-CC-012	G1/Start	CDC28|CLN1|CLN2	YBR160W|YMR199W|YPL256C	SIC1	YLR079W	phosphorylation	G1-CDKによるSic1リン酸化（3部位）が分解とS期進入に必須	9334303	Verma R et al. Science 278:455-60 (1997)	Wikipedia引用	未照合	未照合
+SCE-CC-013	G1/Start	CDC4|SKP1|CDC53|CDC34	YFL009W|YDR328C|YDL132W|YDR054C	SIC1	YLR079W	ubiquitination	SCF(Cdc4)+Cdc34がリン酸化Sic1をユビキチン化（再構成系）	9346239	Feldman RM et al. Cell 91:221-30 (1997)	BioGRID	未照合	未照合
+SCE-CC-014	G1/Start	GRR1|SKP1|CDC53|HRT1|CDC34	YJR090C|YDR328C|YDL132W|YOL133W|YDR054C	CLN1	YMR199W	ubiquitination	SCF(Grr1)+Rbx1(Hrt1)がリン酸化Cln1をユビキチン化	10213692	Skowyra D et al. Science 284:662-5 (1999)	BioGRID	未照合	未照合
+SCE-CC-015	G1/Start (PHO)	PHO85|PHO80	YPL031C|YOL001W	PHO4	YFR034C	phosphorylation/inhibition	Pho80-Pho85がPho4をリン酸化し核外移行・不活性化	8108735;8539622	Kaffman A et al. Science 263:1153-6 (1994); O'Neill EM et al. Science 271:209-12 (1996)	BioGRID / Proteopedia引用	未照合	未照合
+SCE-CC-016	G1/Start (PHO)	PHO81	YGR233C	PHO85|PHO80	YPL031C|YOL001W	inhibition	CDK阻害因子Pho81が低リン酸条件でPho80-Pho85を不活性化	7939631	Schneider KR, Smith RL, O'Shea EK. Science 266:122-6 (1994)	*Science DOI(science.7939631)からの推定・要確認	未照合	未照合
+SCE-CC-017	G1/Start	PCL1	YNL289W	PHO85	YPL031C	binding/activation	サイクリンHcs26(Pcl1)–Pho85複合体による細胞周期制御	7973730	Espinoza FH et al. Science 266:1388-91 (1994)	Proteopedia引用	未照合	未照合
+SCE-CC-018	CDK regulation	CAK1	YFL029C	CDC28	YBR160W	phosphorylation/activation	Cak1がCdc28 T169をリン酸化（出芽酵母の生理的CAK）	8752210	Kaldis P, Sutton A, Solomon MJ. Cell 86:553-64 (1996)	Lund Univ. repository	未照合	未照合
+SCE-CC-019	DNA damage (G1)	RAD53	YPL153C	SWI6	YLR182W	phosphorylation/inhibition	DNA損傷時Rad53依存的にSwi6がリン酸化されCLN1/2転写が抑制	9367985	Sidorova JM, Breeden LL. Genes Dev 11:3032-45 (1997)	PMC	未照合	未照合
+SCE-CC-020	S phase	CDC6	YJL194W	ORC1	YML065W	binding	Cdc6はORCと物理的・機能的に相互作用し複製開始頻度を規定	7774008	Liang C, Weinreich M, Stillman B. Cell 81:667-76 (1995)	BioGRID	未照合	未照合
+SCE-CC-021	S phase	CDC4|CDC34|CDC53	YFL009W|YDR054C|YDL132W	CDC6	YJL194W	ubiquitination/proteolysis	Cdc4/34/53経路がCdc6 N末端を介して分解	9312054	Drury LS, Perkins G, Diffley JF. EMBO J 16:5966-76 (1997)	Reactome / PubMed	未照合	未照合
+SCE-CC-022	S phase	TAH11	YJR046W	MCM2	YBL023C	binding (licensing)	Tah11/Sid2をCdt1オルソログとして同定、Mcm2-7ロードに関与	11967159	Devault A et al. Curr Biol 12:689-94 (2002)	SGD	未照合	未照合
+SCE-CC-023	S phase	CDC7|DBF4	YDL017W|YDR052C	MCM2	YBL023C	phosphorylation	Cdc7-Dbf4がMcm2と結合しリン酸化（G1/S）	9407029	Lei M et al. Genes Dev 11:3365-74 (1997)	BioGRID	未照合	未照合
+SCE-CC-024	S phase	DBF4	YDR052C	CDC7	YDL017W	binding/activation	Dbf4との会合によるCdc7キナーゼの細胞周期制御	8474449	Jackson AL et al. Mol Cell Biol 13:2899-908 (1993)	他論文の引用(PMID併記)	未照合	未照合
+SCE-CC-025	S phase	CDC28|CLB5	YBR160W|YPR120C	SLD2|SLD3	YKL108W|YGL113W	phosphorylation	S-CDKによるSld2/Sld3リン酸化がDpb11との結合と複製開始を誘導	17167415	Tanaka S et al. Nature 445:328-32 (2007)	BioGRID	未照合	未照合
+SCE-CC-026	S phase checkpoint	RAD53	YPL153C	SLD3|DBF4	YGL113W|YDR052C	phosphorylation/inhibition	Rad53がSld3とDbf4をリン酸化し後期起点の発火を抑制	20835227	Zegerman P, Diffley JF. Nature 467:474-8 (2010)	BioGRID/PMC	未照合	未照合
+SCE-CC-027	G2/M	MCM1|FKH2	YMR043W|YNL068C	NDD1	YOR372C	binding (recruitment)	Mcm1-Fkh2がNdd1をG2/M遺伝子(CLB2クラスター)プロモーターに呼び込む	10894549	Koranda M et al. Nature 406:94-8 (2000)	SGD	未照合	未照合
+SCE-CC-028	G2/M	CDC28|CLB2	YBR160W|YPR119W	NDD1	YOR372C	phosphorylation/activation	Clb-Cdc28によるNdd1 T319リン酸化がFkh2 FHAへの結合に必要（正のフィードバック）	12865300	Reynolds D et al. Genes Dev 17:1789-802 (2003)	BioGRID	未照合	未照合
+SCE-CC-029	G2/M	CLB2|CDC28	YPR119W|YBR160W	SWI4	YER111C	phosphorylation/repression	Clb2はCLBの発現を促進しSBF標的(CLN1/2)を抑制、Swi4はClb2-Cdc28の基質	8402888	Amon A et al. Cell 74:993-1007 (1993)	BioGRID	未照合	未照合
+SCE-CC-030	G2/M	SWE1	YJL187C	CDC28	YBR160W	phosphorylation/inhibition	Wee1ホモログSwe1がCdc28を負に制御（G2サイクリン複合体に差次的に作用）	8253069	Booher RN, Deshaies RJ, Kirschner MW. EMBO J 12:3417-26 (1993)	PMC	未照合	未照合
+SCE-CC-031	G2/M (morphogenesis checkpoint)	HSL1|HSL7	YKL101W|YBR133C	SWE1	YJL187C	inhibition (degradation)	Hsl1とHsl7がSwe1分解を促進（Hsl7–Swe1複合体）	10490630	McMillan JN et al. Mol Cell Biol 19:6929-39 (1999)	SGD	未照合	未照合
+SCE-CC-032	G2/M	CDC5	YMR001C	SWE1	YJL187C	phosphorylation/inhibition	Cla4とCdc5が順次Swe1をリン酸化・不活性化	15037762	Sakchaisri K et al. PNAS (2004)	BioGRID	未照合	未照合
+SCE-CC-033	G2/M	CDC28|CLB2	YBR160W|YPR119W	SWE1	YJL187C	phosphorylation (priming)	Clb2-Cdc28がSwe1をリン酸化しCdc5依存の過剰リン酸化・分解を促す	15920482	Asano S et al. EMBO J 24:2194-204 (2005)	BioGRID	未照合	未照合
+SCE-CC-034	M (SAC)	MAD2	YJL030W	CDC20	YGL116W	inhibition (binding)	Mad1/2/3がCdc20と結合、チェックポイント耐性Cdc20変異は結合を失う	9461437	Hwang LH et al. Science 279:1041-4 (1998)	SGD/ScienceOpen	未照合	未照合
+SCE-CC-035	M (SAC)	MAD1	YGL086W	MAD2	YJL030W	binding	Mad1–Mad2の強固な複合体がチェックポイント機能に必須	10436016	Chen RH et al. Mol Biol Cell 10:2607-18 (1999)	PMC	未照合	未照合
+SCE-CC-036	M (SAC)	MAD3	YJL013C	BUB3|CDC20|MAD2	YOR026W|YGL116W|YJL030W	binding	Mad3はBub3, Cdc20, Mad2と相互作用	10704439	Hardwick KG et al. J Cell Biol 148:871-82 (2000)	BioGRID	未照合	未照合
+SCE-CC-037	M (APC/C)	CDC20|CDC16|CDC23|CDC27	YGL116W|YKL022C|YHR166C|YBL084C	PDS1	YDR113C	ubiquitination/proteolysis	Pds1はAPC依存的に分解され後期開始を制御；Cdc20はPds1分解に必要	8985178;9334304	Cohen-Fix O et al. Genes Dev 10:3081-93 (1996); Visintin R, Prinz S, Amon A. Science 278:460-3 (1997)	SGD / 他論文の引用	未照合	未照合
+SCE-CC-038	M	PDS1	YDR113C	ESP1	YGR098C	inhibition (binding)	Pds1–Esp1複合体の形成。APCはPds1を分解しEsp1を解放	9635435	Ciosk R et al. Cell 93:1067-76 (1998)	PubMed accession	未照合	未照合
+SCE-CC-039	M	ESP1	YGR098C	MCD1	YDL003W	proteolysis (cleavage)	Esp1がScc1/Mcd1を切断し姉妹染色分体を分離		Uhlmann F, Lottspeich F, Nasmyth K. Nature 400:37-42 (1999) doi:10.1038/21831	PMID未確認（DOIで同定）	未照合	未照合
+SCE-CC-040	M	CDC5	YMR001C	MCD1	YDL003W	phosphorylation/activation	Cdc5がScc1切断部位近傍をリン酸化し切断を促進	11371343	Alexandru G et al. Cell 105:459-72 (2001)	SGD	未照合	未照合
+SCE-CC-041	M (APC/C)	CDC28	YBR160W	CDC16|CDC27|CDC23	YKL022C|YBL084C|YHR166C	phosphorylation/activation	Cdc28によるリン酸化がAPC-Cdc20活性を活性化	10871279	Rudner AD, Murray AW. J Cell Biol 149:1377-90 (2000)	他論文の引用(PMID併記)	未照合	未照合
+SCE-CC-042	DNA damage (G2/M)	CHK1	YBR274W	PDS1	YDR113C	phosphorylation (stabilization)	Chk1はPds1量を維持、Rad53はCdc5を介して後期進入・M期脱出を阻止	10550056	Sanchez Y et al. Science 286:1166-71 (1999)	BioGRID	未照合	未照合
+SCE-CC-043	DNA damage (G2/M)	RAD53	YPL153C	CDC5	YMR001C	inhibition	同上（Rad53–Cdc5経路）	10550056	同上	BioGRID	未照合	未照合
+SCE-CC-044	DNA damage	MEC1|TEL1	YBR136W|YBL088C	RAD53	YPL153C	phosphorylation/activation	Mec1とTel1がDNA損傷時にRad53リン酸化を制御	8553072	Sanchez Y et al. Science 271:357-60 (1996)	REPAIRtoire/BVS	未照合	未照合
+SCE-CC-045	DNA damage	RAD9	YDR217C	RAD53	YPL153C	binding/activation	リン酸化Rad9がRad53 FHAドメインと結合	9657725	Sun Z et al. Science 281:272-4 (1998)	BioGRID	未照合	未照合
+SCE-CC-046	Replication stress	MRC1	YCL061C	RAD53	YPL153C	activation (adaptor)	Mrc1が複製ストレス時のRad53活性化を媒介	11715016	Alcasabas AA et al. Nat Cell Biol 3:958-65 (2001)	PomBase	未照合	未照合
+SCE-CC-047	Mitotic exit (APC/C)	CDH1	YGL003C	CLB2	YPR119W	ubiquitination/proteolysis	Hct1/Cdh1はClb2分解（APC）を制御	9288748;9334304	Schwab M, Lutum AS, Seufert W. Cell 90:683-93 (1997); Visintin et al. (1997)	他論文の引用(PMID併記)	未照合	未照合
+SCE-CC-048	Mitotic exit	CDC28|CLB2|CLB5	YBR160W|YPR119W|YPR120C	CDH1	YGL003C	phosphorylation/inhibition	CDKによるHct1リン酸化がAPCとの結合を阻害	9831566;10074450	Zachariae W et al. Science 282:1721-4 (1998); Jaspersen SL et al. Curr Biol 9:227-36 (1999)	BioGRID / GONUTS	未照合	未照合
+SCE-CC-049	Mitotic exit	CDC14	YFR028C	CDH1	YGL003C	dephosphorylation/activation	Cdc14がHct1を脱リン酸化・活性化	10074450;9885559	Jaspersen SL et al. (1999); Visintin R et al. Mol Cell 2:709-18 (1998)	GONUTS / BioGRID	未照合	未照合
+SCE-CC-050	Mitotic exit	CDC14	YFR028C	SIC1|SWI5	YLR079W|YDR146C	dephosphorylation	Cdc14がSic1とSwi5を脱リン酸化しCDK不活性化を促進	9885559	Visintin R et al. Mol Cell 2:709-18 (1998)	BioGRID	未照合	未照合
+SCE-CC-051	Mitotic exit	SWI5	YDR146C	SIC1	YLR079W	expression	後期にSwi5依存的にSIC1が転写される	8816483;9017392	Knapp D et al. Mol Cell Biol 16:5701-7 (1996); Toyn JH et al. Genetics 145:85-96 (1997)	BioGRID	未照合	未照合
+SCE-CC-052	Mitotic exit (RENT)	NET1	YJL076W	CDC14	YFR028C	inhibition (sequestration)	Net1(Cfi1)がCdc14を核小体RENT複合体に隔離・阻害	10219244	Shou W et al. Cell 97:233-44 (1999)	BioGRID	未照合	未照合
+SCE-CC-053	Mitotic exit (MEN)	TEM1	YML064C	CDC14	YFR028C	activation (release)	後期にTem1依存的にCdc14がRENTから解離	10219244	同上	BioGRID	未照合	未照合
+SCE-CC-054	Mitotic exit (MEN)	CDC15	YAR019C	DBF2|MOB1	YGR092W|YIL106W	phosphorylation/activation	Cdc15がMob1結合Dbf2を直接リン酸化・活性化	11404483	Mah AS, Jang J, Deshaies RJ. PNAS 98:7325-30 (2001)	BioGRID/PMC	未照合	未照合
+SCE-CC-055	Mitotic exit (MEN)	BUB2|BFA1	YMR055C|YJR053W	TEM1	YML064C	inhibition (GAP)	Bub2-Bfa1はTem1の2成分GAP；Bfa1単独でもTem1を阻害	11959999	Ro HS, Song S, Lee KS. PNAS 99:5436-41 (2002); Geymonat M et al. J Biol Chem 277:28439-45 (2002) [PMID未確認]	PMC	未照合	未照合
+SCE-CC-056	Mitotic exit (MEN)	CDC5	YMR001C	BFA1	YJR053W	phosphorylation/inhibition	Cdc5がBfa1をリン酸化しGAP活性を阻害	11733064;12637549	Hu F et al. Cell 107:655-65 (2001); Geymonat M et al. J Biol Chem 278:14591-4 (2003)	BioGRID/PubMed	未照合	未照合
+SCE-CC-057	Mitotic exit (FEAR)	ESP1|SLK19|SPO12|CDC5	YGR098C|YOR195W|YHR152W|YMR001C	CDC14	YFR028C	activation (release)	FEARネットワークが後期初期のCdc14放出を促進	11832211	Stegmeier F, Visintin R, Amon A. Cell 108:207-20 (2002)	BioGRID	未照合	未照合
+SCE-CC-058	Mitotic exit (FEAR)	CDC28|CLB2	YBR160W|YPR119W	NET1	YJL076W	phosphorylation	Clb-CDKによるNet1リン酸化がCdc14放出の基盤	15273393	Azzam R et al. Science 305:516-9 (2004)	SGD	未照合	未照合
+SCE-CC-059	Mitotic exit (FEAR)	ESP1	YGR098C	CDC55	YGL190C	inhibition	Separaseが PP2A-Cdc55 を抑制しNet1リン酸化を可能にする		Queralt E et al. Cell 125:719-32 (2006)	PMID未確認	未照合	未照合
+SCE-CC-060	Mitotic exit (FEAR)	CDC5	YMR001C	CDC14|ESP1|SLK19	YFR028C|YGR098C|YOR195W	binding	Cdc5はFEAR因子Esp1, Slk19およびCdc14と物理的に会合	18927509	Rahal R, Amon A. Cell Cycle (2008)	PMC	未照合	未照合
+SCE-CC-061	M/G1	YOX1|YHP1	YML027W|YDR451C	MCM1	YMR043W	binding/repression	Yox1/Yhp1がMcm1と結合しECB依存転写(CLN3, SWI4, CDC6, MCM)をM/G1期に限定	12464633	Pramila T et al. Genes Dev 16:3034-45 (2002)	PubMed link	未照合	未照合
