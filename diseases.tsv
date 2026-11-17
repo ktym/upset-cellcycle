@@ -1,0 +1,47 @@
+hsa_gene	note_ja	note_en	evidence	curation
+AMBRA1	がん抑制因子。欠失でCDK4/6阻害薬への感受性が低下	Tumour suppressor; its loss reduces sensitivity to CDK4/6 inhibitors		TODO
+ATM	毛細血管拡張性運動失調症。乳がんなどの易罹患性	Ataxia-telangiectasia; susceptibility to breast and other cancers		TODO
+ATR	Seckel症候群1	Seckel syndrome 1		TODO
+AURKA	抗がん剤の標的（Aurora阻害薬）	Anticancer drug target (Aurora inhibitors)		TODO
+AURKB	抗がん剤の標的（Aurora阻害薬）	Anticancer drug target (Aurora inhibitors)		TODO
+BUB1B	mosaic variegated aneuploidy症候群1	Mosaic variegated aneuploidy syndrome 1		TODO
+CCND1	多くのがんで増幅・転座（マントル細胞リンパ腫など）	Amplified or translocated in many cancers (e.g. mantle cell lymphoma)		TODO
+CCNE1	卵巣がんなどで増幅	Amplified in ovarian and other cancers		TODO
+CCNF	筋萎縮性側索硬化症・前頭側頭型認知症	Amyotrophic lateral sclerosis and frontotemporal dementia		TODO
+CDC14A	常染色体劣性難聴（DFNB32）	Autosomal recessive deafness (DFNB32)		TODO
+CDC6	Meier-Gorlin症候群	Meier-Gorlin syndrome		TODO
+CDC7	抗がん剤の標的（CDC7阻害薬）	Anticancer drug target (CDC7 inhibitors)		TODO
+CDK1	CDK阻害薬の標的	Target of CDK inhibitors		TODO
+CDK2	CDK阻害薬の標的	Target of CDK inhibitors		TODO
+CDK4	家族性メラノーマ。CDK4/6阻害薬の標的	Familial melanoma; target of CDK4/6 inhibitors		TODO
+CDK6	CDK4/6阻害薬の標的	Target of CDK4/6 inhibitors		TODO
+CDKN1B	多発性内分泌腫瘍症4型（MEN4）	Multiple endocrine neoplasia type 4 (MEN4)		TODO
+CDKN2A	家族性メラノーマ・膵がん。多くのがんで欠失	Familial melanoma and pancreatic cancer; deleted in many cancers		TODO
+CDT1	Meier-Gorlin症候群	Meier-Gorlin syndrome		TODO
+CHEK1	抗がん剤の標的（CHK1阻害薬）	Anticancer drug target (CHK1 inhibitors)		TODO
+CHEK2	乳がんなどの遺伝性易罹患性	Hereditary susceptibility to breast and other cancers		TODO
+CKS1B	多発性骨髄腫の1q増幅領域	Within the 1q gain region of multiple myeloma		TODO
+DONSON	小頭症を伴う原発性小人症	Microcephalic primordial dwarfism		TODO
+DYRK1A	知的障害を伴う神経発達症。ダウン症候群の責任領域	Neurodevelopmental disorder with intellectual disability; within the Down syndrome critical region		TODO
+FBXW7	がん抑制遺伝子（T-ALL、大腸がんなどで変異）	Tumour suppressor (mutated in T-ALL, colorectal cancer and others)		TODO
+GMNN	Meier-Gorlin症候群	Meier-Gorlin syndrome		TODO
+KNL1	原発性小頭症（MCPH4）	Primary microcephaly (MCPH4)		TODO
+LATS1	Hippo経路のがん抑制因子	Tumour suppressor of the Hippo pathway		TODO
+MCM4	NK細胞欠損と副腎不全を伴う免疫不全	Immunodeficiency with NK-cell deficiency and adrenal insufficiency		TODO
+MDM2	肉腫などで増幅	Amplified in sarcomas and other tumours		TODO
+MYC	多くのがんで増幅・転座	Amplified or translocated in many cancers		TODO
+ORC1	Meier-Gorlin症候群	Meier-Gorlin syndrome		TODO
+PLK1	抗がん剤の標的（PLK1阻害薬）	Anticancer drug target (PLK1 inhibitors)		TODO
+PPP2R5D	知的障害を伴う神経発達症	Neurodevelopmental disorder with intellectual disability		TODO
+PTTG1	下垂体腫瘍などで過剰発現	Overexpressed in pituitary and other tumours		TODO
+RAD21	Cornelia de Lange症候群4	Cornelia de Lange syndrome 4		TODO
+RB1	網膜芽細胞腫。多くのがんで不活性化	Retinoblastoma; inactivated in many cancers		TODO
+RECQL4	Rothmund-Thomson症候群	Rothmund-Thomson syndrome		TODO
+SKP2	多くのがんで過剰発現	Overexpressed in many cancers		TODO
+STAG2	膀胱がん・骨髄系腫瘍などで変異	Mutated in bladder cancer, myeloid neoplasms and others		TODO
+STK4	STK4欠損症（原発性免疫不全）	STK4 deficiency (primary immunodeficiency)		TODO
+TP53	Li-Fraumeni症候群。ヒトがんで最も高頻度に変異	Li-Fraumeni syndrome; the most frequently mutated gene in human cancer		TODO
+TRIP13	mosaic variegated aneuploidy症候群、Wilms腫瘍の素因	Mosaic variegated aneuploidy syndrome; predisposition to Wilms tumour		TODO
+TTK	抗がん剤の標的（MPS1阻害薬）	Anticancer drug target (MPS1 inhibitors)		TODO
+VCP	封入体ミオパチー・前頭側頭型認知症（IBMPFD）、ALS	Inclusion body myopathy with frontotemporal dementia (IBMPFD), ALS		TODO
+WEE1	抗がん剤の標的（WEE1阻害薬）	Anticancer drug target (WEE1 inhibitors)		TODO

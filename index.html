@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cell-cycle timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one time-ordered matrix. Columns = interactions in order of occurrence,
+   rows = human genes (in Compare: human genes with their counterparts in other organisms) in order of first appearance;
+   a bar per row spans its active window. Detail pane at right.
+   Organisms are told apart by dedicated hues, effects by four semantic hues. Data come from cellcycle.json (build.rb). */
+:root {
+  --bg: #f4f6f8; --panel: #ffffff; --ink: #18222d; --muted: #5d6b79; --line: #d5dce3;
+  --bar: #c9d3dd; --band-a: #eef2f6; --band-b: #f8fafb; --accent: #0b6e8a; --accent-soft: #dceff4;
+  --act: #1f8a55; --inh: #c4442a; --mod: #3565b0; --bind: #6a7582; --disease: #a8327a; --todo: #b7791f;
+  --hsa: #6b4fbb; --o1: #b7791f; --o2: #1d8a8a; --o3: #c0527a; --o4: #5f7f2e; --o5: #4a6fa5;
+  --display: "IBM Plex Sans JP", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --body: "IBM Plex Sans JP", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171d; --panel: #18212a; --ink: #e4eaf0; --muted: #93a1af; --line: #2c3945;
+    --bar: #3a4a5a; --band-a: #1c2630; --band-b: #18212a; --accent: #4fb6d1; --accent-soft: #17343d;
+    --act: #4cc38a; --inh: #f0795f; --mod: #7aa5ea; --bind: #9aa6b3; --disease: #e07ab8; --todo: #e0a94a;
+    --hsa: #a892ee; --o1: #e0a94a; --o2: #4fc4c4; --o3: #ea8fb0; --o4: #a3c56a; --o5: #8fb0e0; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171d; --panel: #18212a; --ink: #e4eaf0; --muted: #93a1af; --line: #2c3945;
+  --bar: #3a4a5a; --band-a: #1c2630; --band-b: #18212a; --accent: #4fb6d1; --accent-soft: #17343d;
+  --act: #4cc38a; --inh: #f0795f; --mod: #7aa5ea; --bind: #9aa6b3; --disease: #e07ab8; --todo: #e0a94a;
+  --hsa: #a892ee; --o1: #e0a94a; --o2: #4fc4c4; --o3: #ea8fb0; --o4: #a3c56a; --o5: #8fb0e0; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.6;
+  display: flex; flex-direction: column; }
+header { padding: 12px 20px 10px; display: flex; flex-direction: column; gap: 7px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+h1 { font-family: var(--display); font-size: 19px; font-weight: 700; margin: 0; letter-spacing: .01em; }
+.lede { margin: 0; color: var(--muted); font-size: 13px; max-width: 78ch; }
+.titlerow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.guide { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 12px; font-weight: 600; line-height: 1; padding: 5px 10px 5px 8px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--muted); cursor: pointer; white-space: nowrap;
+  transition: background .15s, color .15s, border-color .15s; }
+.guide:hover { color: var(--accent); border-color: var(--accent); }
+.guide[aria-expanded="true"] { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.guide .chev { transition: transform .2s; }
+.guide[aria-expanded="true"] .chev { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .guide, .guide .chev { transition: none; } }
+.controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; flex: none; }
+.seg button { font: inherit; font-size: 13px; padding: 4px 11px; border: 0; background: var(--panel); color: var(--ink); cursor: pointer; border-right: 1px solid var(--line); white-space: nowrap; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); font-weight: 600; }
+.seg.sub button { font-size: 12px; padding: 3px 9px; }
+#q { font: inherit; font-size: 13px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); width: 230px; }
+button:focus-visible, .guide:focus-visible, #q:focus-visible, a:focus-visible, .col:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.legend { display: flex; flex-wrap: wrap; gap: 3px 14px; font-size: 12px; color: var(--muted); align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.legend svg { flex: none; }
+[hidden] { display: none !important; }
+main { flex: 1; min-height: 0; display: flex; }
+.scroller { flex: 1; min-width: 0; overflow: auto; display: grid; grid-template-columns: var(--labw, 180px) max-content; grid-template-rows: max-content max-content; background: var(--panel); align-content: start; }
+.corner { position: sticky; top: 0; left: 0; z-index: 3; background: var(--panel); border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+  font-size: 11px; color: var(--muted); padding: 4px 8px; display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; line-height: 1.35; }
+.colhead { position: sticky; top: 0; z-index: 2; background: var(--panel); border-bottom: 1px solid var(--line); line-height: 0; }
+.rowlabs { position: sticky; left: 0; z-index: 1; background: var(--panel); border-right: 1px solid var(--line); }
+.rowlab { display: flex; align-items: center; gap: 5px; width: 100%; height: 20px; padding: 0 8px 0 6px; border: 0; background: none; color: var(--ink);
+  font: 500 12px/1 var(--mono); cursor: pointer; text-align: left; white-space: nowrap; overflow: hidden; }
+.rowlab .nm { overflow: hidden; text-overflow: ellipsis; }
+.rowlab .hs { font-weight: 400; color: var(--muted); font-size: 11px; margin-left: auto; overflow: hidden; text-overflow: ellipsis; padding-left: 6px; text-align: right; }
+.dz { display: inline-block; width: 6px; height: 6px; border-radius: 1px; background: var(--disease); flex: none; }
+.sp { display: inline-flex; gap: 1px; flex: none; }
+.sp i { width: 3px; height: 12px; border-radius: 1px; background: var(--line); }
+.rowlab:hover, .rowlab.hot { background: var(--accent-soft); }
+.rowlab.sel { background: var(--accent); color: var(--panel); }
+.rowlab.sel .hs { color: var(--panel); }
+.rowlab.match { box-shadow: inset 0 -2px 0 var(--accent); }
+svg text { font-family: var(--body); fill: var(--ink); }
+.col { cursor: pointer; }
+.col.dim { opacity: .16; }
+.col .hit { fill: transparent; }
+.col:hover .hit { fill: var(--accent); fill-opacity: .1; }
+.col.sel .hit { fill: var(--accent); fill-opacity: .22; }
+.col.cp .hit { fill: var(--accent); fill-opacity: .12; }
+aside { width: 370px; flex: none; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 16px 18px 28px; }
+aside h2 { font-family: var(--display); font-size: 16px; margin: 0 0 2px; line-height: 1.4; text-wrap: balance; overflow-wrap: anywhere; }
+aside h3 { font-size: 12px; font-weight: 600; color: var(--muted); margin: 16px 0 5px; letter-spacing: .04em; }
+aside p { margin: 0 0 6px; }
+.gene { font-family: var(--mono); font-weight: 600; }
+.pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); margin-right: 5px; white-space: nowrap; }
+.pill.act { border-color: var(--act); color: var(--act); } .pill.inh { border-color: var(--inh); color: var(--inh); }
+.pill.mod { border-color: var(--mod); color: var(--mod); } .pill.bind { border-color: var(--bind); color: var(--bind); }
+.pill.org { color: var(--panel); }
+.pill.DONE { border-color: var(--act); color: var(--act); } .pill.TODO { border-color: var(--todo); color: var(--todo); }
+.meta { color: var(--muted); font-size: 12px; }
+aside ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+aside li { padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; overflow-wrap: anywhere; }
+aside a { color: var(--accent); }
+.links { display: flex; flex-wrap: wrap; gap: 3px 10px; font-size: 12px; }
+.ixbtn { font: inherit; font-size: 12px; text-align: left; width: 100%; border: 0; background: none; color: var(--ink); cursor: pointer; padding: 0; }
+.ixbtn:hover { color: var(--accent); }
+.note { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); margin-top: 18px; padding-top: 10px; }
+.fail { margin: 24px; max-width: 70ch; }
+.fail code { font-family: var(--mono); background: var(--band-a); padding: 1px 5px; border-radius: 4px; }
+@media (max-width: 860px) {
+  main { flex-direction: column; }
+  aside { width: auto; border-left: 0; border-top: 1px solid var(--line); max-height: 45%; }
+  .scroller { --labw: 130px !important; }
+  .rowlab .hs { display: none; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div class="titlerow">
+      <h1>Cell-cycle timeline</h1>
+      <button type="button" class="guide" id="ledeBtn" aria-controls="lede">
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="7" cy="4.1" r=".95" fill="currentColor"/><path d="M7 6.3v4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span data-t="guide"></span>
+        <svg class="chev" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="seg" role="group" aria-label="Language">
+      <button type="button" data-lang="ja" aria-pressed="true">日本語</button>
+      <button type="button" data-lang="en" aria-pressed="false">English</button>
+    </div>
+  </div>
+  <p class="lede" id="lede" data-t="lede"></p>
+  <div class="controls">
+    <div class="seg" role="group" id="modes"></div>
+    <div class="seg sub" role="group" id="cmpf">
+      <button type="button" data-cf="all" data-t="fAll"></button>
+      <button type="button" data-cf="both" data-t="fBoth"></button>
+      <button type="button" data-cf="hsa" data-t="fHsa"></button>
+      <button type="button" data-cf="other" data-t="fOther"></button>
+    </div>
+    <input id="q" type="search">
+  </div>
+  <div class="legend" id="legend"></div>
+</header>
+<main>
+  <div class="scroller" id="scroller">
+    <div class="corner"><span id="cornerA"></span><span id="cornerB"></span></div>
+    <div class="colhead" id="colhead"></div>
+    <div class="rowlabs" id="rowlabs"></div>
+    <div id="body"></div>
+  </div>
+  <aside id="detail" aria-live="polite"></aside>
+</main>
+<script>
+const T = {
+  ja: {
+    lede: 'ヒトの細胞周期の相互作用を起きる順に列として、遺伝子を登場順に行として並べています。横棒はその遺伝子が関わる期間、縦線は1つの相互作用で、丸が作用する側、印が受ける側です。「比較」ではヒト遺伝子の行に他の生物種の対応遺伝子を重ね、各生物種の相互作用を同じ時間軸に並べます。',
+    cmpMode: '比較', guide: '図の見方',
+    fAll: 'すべて', fBoth: 'ヒトと対応あり', fHsa: 'ヒトのみ', fOther: '他生物種のみ',
+    search: '遺伝子名で探す（例: RB1, WHI5）',
+    lgSrc: '作用する側', act: '活性化', inh: '抑制・分解', mod: '修飾', bind: '結合', lgDz: 'ヒト遺伝子に疾患メモあり',
+    lgIx: n => `${n}の相互作用`, lgOnly: '枠だけ: ヒトとの対応が見つからない',
+    org: { hsa: 'ヒト', sce: '酵母', spo: '分裂酵母', dme: 'ハエ', cel: '線虫', xla: 'アフリカツメガエル', mmu: 'マウス', dre: 'ゼブラフィッシュ' },
+    cornerGene: n => `${n}遺伝子`, cornerOther: '他生物種の遺伝子', cornerHs: 'ヒト対応（≈ は機能的）', cornerOt: '他生物種での対応',
+    phases: ['M/G1〜G1', 'G1/S', 'S期', 'G2/M', '中期（SAC）', '後期', '分裂終期'],
+    count: n => `${n}件`, range: (a, b) => `${a} から ${b}`,
+    pick: '列か遺伝子名を選んでください', showing: (c, r) => `相互作用 ${c}件、${r}行を表示中。`,
+    what: '反応の内容', refs: '根拠論文', shown: '実証された生物種', unchecked: '書誌未確認', searchLink: 'PubMedで検索',
+    status: '確認状況', manual: { TODO: '文献の手動確認: TODO', DONE: '文献の手動確認: DONE' }, noEvidence: 'KEGG・Reactomeとの照合記録はまだありません。',
+    genes: '遺伝子', none: '対応は未割り当て', ortho: 'オーソログ', func: '機能的な対応',
+    cp: x => (x ? '他の生物種で対応する相互作用' : 'ヒトで対応する相互作用'), noCp: '対応する相互作用は見つかっていません。',
+    gene: '遺伝子', group: 'ヒト遺伝子と他生物種の対応', involved: n => `関わる相互作用（${n}件、起きる順）`,
+    foot: b => `時期の割り当て、生物種間の遺伝子対応、疾患メモは手作業の暫定値です。「対応する相互作用」は、作用する側と受ける側がそれぞれ同じ行に入るものを機械的に拾っています。データ作成日 ${b}。`,
+    headAria: '細胞周期の時期と相互作用の列', bodyAria: '遺伝子と相互作用のマトリクス',
+    fail: 'cellcycle.json を読み込めませんでした。<code>ruby build.rb</code> で作成し、このフォルダをウェブサーバー経由で開いてください（例: <code>python3 -m http.server 8000</code> を実行して <code>http://localhost:8000/</code> を開く）。ブラウザでファイルを直接開いた場合は読み込めません。'
+  },
+  en: {
+    lede: 'Interactions of the human cell cycle are laid out as columns in the order they occur, genes as rows in order of first appearance. A horizontal bar spans the period a gene is involved. Each vertical line is one interaction: a dot marks the acting side, a symbol the receiving side. Compare adds the counterpart genes of other organisms to the human rows and puts each organism\'s interactions on the same time axis.',
+    cmpMode: 'Compare', guide: 'Guide',
+    fAll: 'All', fBoth: 'Matched to human', fHsa: 'Human only', fOther: 'Other organisms only',
+    search: 'Find a gene (e.g. RB1, WHI5)',
+    lgSrc: 'Acting side', act: 'Activation', inh: 'Inhibition / degradation', mod: 'Modification', bind: 'Binding', lgDz: 'Human gene has a disease note',
+    lgIx: n => `${n} interaction`, lgOnly: 'Outline only: no match with human found',
+    org: { hsa: 'Human', sce: 'Yeast', spo: 'Fission yeast', dme: 'Fly', cel: 'Worm', xla: 'Frog', mmu: 'Mouse', dre: 'Zebrafish' },
+    cornerGene: n => `${n} gene`, cornerOther: 'Genes of other organisms', cornerHs: 'Human (≈ functional)', cornerOt: 'In other organisms',
+    phases: ['M/G1 to G1', 'G1/S', 'S phase', 'G2/M', 'Metaphase (SAC)', 'Anaphase', 'Mitotic exit'],
+    count: n => `${n}`, range: (a, b) => `${a} through ${b}`,
+    pick: 'Select a column or a gene name', showing: (c, r) => `Showing ${c} interactions on ${r} rows.`,
+    what: 'Reaction', refs: 'Supporting papers', shown: 'Shown in', unchecked: 'citation not checked', searchLink: 'search PubMed',
+    status: 'Verification', manual: { TODO: 'Manual literature check: TODO', DONE: 'Manual literature check: DONE' }, noEvidence: 'No KEGG or Reactome check recorded yet.',
+    genes: 'Genes', none: 'no counterpart assigned', ortho: 'orthologue', func: 'functional counterpart',
+    cp: x => (x ? 'Corresponding interactions in other organisms' : 'Corresponding interactions in human'), noCp: 'No corresponding interaction found.',
+    gene: 'Gene', group: 'Human gene and counterparts', involved: n => `Interactions involving this row (${n}, in order)`,
+    foot: b => `Phase assignments, cross-species gene correspondences and disease notes are provisional and hand-curated. Corresponding interactions are picked mechanically: the acting and receiving sides must each fall on the same rows. Data built ${b}.`,
+    headAria: 'Cell-cycle phases and interaction columns', bodyAria: 'Matrix of genes and interactions',
+    fail: 'Could not load cellcycle.json. Create it with <code>ruby build.rb</code> and open this folder through a web server (for example run <code>python3 -m http.server 8000</code> and open <code>http://localhost:8000/</code>). It cannot be loaded when the file is opened directly in the browser.'
+  }
+};
+const CW = 17, RH = 20;
+const NS = 'http://www.w3.org/2000/svg';
+const SINGLE = ['hsa', 'sce'];   // organisms that get their own view; all others appear in Compare only
+const state = { lang: 'ja', mode: 'hsa', cf: 'all', sel: null, q: '', lede: true };
+try { const l = localStorage.getItem('cc-lang'); if (l === 'en' || l === 'ja') state.lang = l; state.lede = localStorage.getItem('cc-lede') !== 'off'; } catch (e) {}
+const t = () => T[state.lang];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const el = (n, a = {}, parent) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (parent) parent.appendChild(e); return e; };
+
+let D, ORGS, OTHERS, IX, BYID, ORTH, REV, GROUP, parent;
+const members = x => [...x.src, ...x.tgt];
+const find = k => (parent[k] === k ? k : (parent[k] = find(parent[k])));
+const gkey = (sp, g) => find(sp + ':' + g);
+const orgName = o => t().org[o] || o;
+const orgColor = o => (o === 'hsa' ? 'var(--hsa)' : `var(--o${(OTHERS.indexOf(o) % 5) + 1})`);
+const relMark = r => (r === 'functional' ? '≈ ' : '');
+
+function prepare(data) {
+  D = data;
+  ORGS = Object.keys(D.orgs).sort((a, b) => (b === 'hsa') - (a === 'hsa'));
+  OTHERS = ORGS.filter(o => o !== 'hsa');
+  IX = ORGS.flatMap(o => D.orgs[o].ix.map(x => ({ ...x, sp: o })));
+  BYID = Object.fromEntries(IX.map(x => [x.id, x]));
+  ORTH = {}; REV = {};   // ORTH[org][gene] = {rel, human:[...]};  REV[human] = [{org, g, rel}]
+  for (const m of D.map) {
+    ((ORTH[m.org] ||= {})[m.gene] ||= { rel: m.rel, human: [] }).human.push(m.hsa);
+    (REV[m.hsa] ||= []).push({ org: m.org, g: m.gene, rel: m.rel });
+  }
+  // rows of Compare: connected components over the human-centred correspondence table, restricted to genes in the data
+  parent = {};
+  for (const o of ORGS) for (const g in D.orgs[o].genes) parent[o + ':' + g] = o + ':' + g;
+  for (const m of D.map) if (parent[m.org + ':' + m.gene] && parent['hsa:' + m.hsa]) parent[find(m.org + ':' + m.gene)] = find('hsa:' + m.hsa);
+  GROUP = {};
+  for (const k in parent) { const r = find(k), i = k.indexOf(':'), o = k.slice(0, i); ((GROUP[r] ||= { key: r, by: {} }).by[o] ||= []).push(k.slice(i + 1)); }
+  const shared = k => GROUP[k].by.hsa && Object.keys(GROUP[k].by).length > 1;
+  IX.forEach(x => { x.gs = new Set(x.src.map(g => gkey(x.sp, g)).filter(shared)); x.gt = new Set(x.tgt.map(g => gkey(x.sp, g)).filter(shared)); x.cp = []; });
+  const meets = (a, b) => { for (const k of a) if (b.has(k)) return true; return false; };
+  for (const a of IX) if (a.sp === 'hsa') for (const b of IX) if (b.sp !== 'hsa' && meets(a.gs, b.gs) && meets(a.gt, b.gt)) { a.cp.push(b.id); b.cp.push(a.id); }
+}
+
+const rowKey = x => g => (state.mode === 'cmp' ? gkey(x.sp, g) : g);
+const rowKeys = x => members(x).map(rowKey(x));
+const phase = i => t().phases[i];
+function rowInfo(k) {
+  if (state.mode === 'hsa') {
+    const r = REV[k] || [];
+    return { name: k, sub: r.length ? relMark(r[0].rel) + r.map(o => o.g).join('/') : '', dz: !!D.disease[k], by: { hsa: [k] } };
+  }
+  if (state.mode !== 'cmp') {
+    const m = (ORTH[state.mode] || {})[k];
+    return { name: k, sub: m ? relMark(m.rel) + m.human.join('/') : '', dz: !!m && m.human.some(h => D.disease[h]), by: { [state.mode]: [k] } };
+  }
+  const by = GROUP[k].by, hs = by.hsa || [];
+  return { name: hs.join('/'), sub: OTHERS.filter(o => by[o]).map(o => by[o].join('/')).join(' · '), dz: hs.some(h => D.disease[h]), by };
+}
+const rowNames = r => Object.values(r.by).flat();
+
+let cols = [], rows = [], rowIdx = {};
+function layout() {
+  const pool = IX.filter(x => {
+    if (state.mode !== 'cmp') return x.sp === state.mode;
+    if (state.cf === 'both') return x.cp.length > 0;
+    if (state.cf === 'hsa') return x.sp === 'hsa' && !x.cp.length;
+    if (state.cf === 'other') return x.sp !== 'hsa' && !x.cp.length;
+    return true;
+  });
+  cols = pool.map((x, i) => [x, i]).sort((a, b) => a[0].ph[0] - b[0].ph[0] || ORGS.indexOf(a[0].sp) - ORGS.indexOf(b[0].sp) || a[1] - b[1]).map(a => a[0]);
+  const span = {};
+  cols.forEach((x, c) => rowKeys(x).forEach(k => { (span[k] ||= [c, c])[1] = c; }));
+  cols.forEach(x => { if (x.ph[1] > x.ph[0]) { let last = 0; cols.forEach((y, c) => { if (y.ph[0] <= x.ph[1]) last = c; }); rowKeys(x).forEach(k => { span[k][1] = Math.max(span[k][1], last); }); } });
+  rows = Object.keys(span).sort((a, b) => span[a][0] - span[b][0] || span[a][1] - span[b][1]).map(k => ({ k, from: span[k][0], to: span[k][1], ...rowInfo(k) }));
+  rowIdx = {}; rows.forEach((r, i) => { rowIdx[r.k] = i; });
+}
+
+function mark(g, cls, x, y) {
+  const c = `var(--${cls})`;
+  if (cls === 'act') return el('path', { d: `M${x} ${y - 5} ${x + 5} ${y + 4.5}H${x - 5}z`, fill: c }, g);
+  if (cls === 'inh') return el('rect', { x: x - 5.5, y: y - 2.5, width: 11, height: 5, fill: c }, g);
+  if (cls === 'mod') return el('path', { d: `M${x} ${y - 5.5} ${x + 5.5} ${y} ${x} ${y + 5.5} ${x - 5.5} ${y}z`, fill: c }, g);
+  return el('circle', { cx: x, cy: y, r: 3.8, fill: 'var(--panel)', stroke: c, 'stroke-width': 2 }, g);
+}
+const colLabel = x => `${x.src.join('+')} → ${x.tgt.join('+')} (${x.type})`;
+const sw = (inner, w = 12) => `<svg width="${w}" height="12">${inner}</svg>`;
+
+function chrome() {
+  const L = t(), cmp = state.mode === 'cmp';
+  document.documentElement.lang = state.lang;
+  document.querySelectorAll('[data-t]').forEach(n => { n.textContent = L[n.dataset.t]; });
+  document.getElementById('lede').hidden = !state.lede;
+  document.getElementById('ledeBtn').setAttribute('aria-expanded', state.lede);
+  const q = document.getElementById('q'); q.placeholder = L.search; q.setAttribute('aria-label', L.search);
+  document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === state.lang));
+  const modes = [...SINGLE.filter(o => D.orgs[o]), ...(OTHERS.length ? ['cmp'] : [])];
+  document.getElementById('modes').innerHTML = modes.map(m => `<button type="button" data-mode="${m}" aria-pressed="${m === state.mode}">${m === 'cmp' ? L.cmpMode : orgName(m)}</button>`).join('');
+  document.querySelectorAll('[data-cf]').forEach(b => b.setAttribute('aria-pressed', b.dataset.cf === state.cf));
+  document.getElementById('cmpf').hidden = !cmp;
+  const item = (svg, text) => `<span>${svg}${esc(text)}</span>`;
+  document.getElementById('legend').innerHTML = [
+    item(sw('<circle cx="6" cy="6" r="4" fill="var(--ink)"/>'), L.lgSrc),
+    item(sw('<path d="M6 1.5 10.5 10h-9z" fill="var(--act)"/>'), L.act),
+    item(sw('<rect x="1" y="4" width="10" height="4" fill="var(--inh)"/>'), L.inh),
+    item(sw('<path d="M6 1 11 6 6 11 1 6z" fill="var(--mod)"/>'), L.mod),
+    item(sw('<circle cx="6" cy="6" r="3.6" fill="none" stroke="var(--bind)" stroke-width="2"/>'), L.bind),
+    item(sw('<rect x="1" y="3" width="6" height="6" rx="1" fill="var(--disease)"/>', 8), L.lgDz),
+    ...(cmp ? [...ORGS.map(o => item(sw(`<rect x="1" y="1" width="12" height="10" rx="2" fill="${orgColor(o)}"/>`, 14), L.lgIx(orgName(o)))),
+      item(sw('<rect x="1.5" y="1.5" width="11" height="9" rx="2" fill="none" stroke="var(--muted)"/>', 14), L.lgOnly)] : [])
+  ].join('');
+  document.getElementById('cornerA').textContent = L.cornerGene(orgName(cmp ? 'hsa' : state.mode));
+  document.getElementById('cornerB').textContent = cmp ? L.cornerOther : (state.mode === 'hsa' ? L.cornerOt : L.cornerHs);
+  document.getElementById('scroller').style.setProperty('--labw', cmp ? '236px' : '180px');
+}
+
+function render() {
+  const L = t(), cmp = state.mode === 'cmp';
+  chrome();
+  layout();
+  const HH = cmp ? 58 : 42;
+  const W = Math.max(cols.length * CW + 10, 200), H = rows.length * RH + 6;
+  const groups = []; cols.forEach((x, c) => { const p = x.ph[0]; const g = groups[groups.length - 1]; if (g && g.p === p) g.to = c; else groups.push({ p, from: c, to: c }); });
+
+  const head = el('svg', { width: W, height: HH, role: 'img', 'aria-label': L.headAria });
+  groups.forEach((g, i) => {
+    const x0 = g.from * CW, w = (g.to - g.from + 1) * CW;
+    el('rect', { x: x0, y: 0, width: w, height: HH, fill: i % 2 ? 'var(--band-b)' : 'var(--band-a)' }, head);
+    if (w >= 60) {
+      el('text', { x: x0 + 6, y: 17, 'font-size': 12, 'font-weight': 600 }, head).textContent = phase(g.p);
+      el('text', { x: x0 + 6, y: 32, 'font-size': 10.5, style: 'fill:var(--muted)' }, head).textContent = L.count(g.to - g.from + 1);
+    }
+  });
+  if (cmp) cols.forEach((x, c) => {
+    const cx = c * CW + CW / 2, col = orgColor(x.sp);
+    el('rect', { x: cx - 6.5, y: 40, width: 13, height: 13, rx: 2.5, style: `fill:${x.cp.length ? col : 'var(--panel)'};stroke:${col}`, 'stroke-width': 1.2 }, head);
+  });
+
+  const body = el('svg', { width: W, height: H, role: 'img', 'aria-label': L.bodyAria });
+  groups.forEach((g, i) => el('rect', { x: g.from * CW, y: 0, width: (g.to - g.from + 1) * CW, height: H, fill: i % 2 ? 'var(--band-b)' : 'var(--band-a)' }, body));
+  rows.forEach((r, i) => el('rect', { x: r.from * CW + 3, y: i * RH + RH / 2 - 3.5, width: (r.to - r.from) * CW + CW - 6, height: 7, rx: 3.5, fill: 'var(--bar)' }, body));
+  cols.forEach((x, c) => {
+    const g = el('g', { class: 'col', 'data-id': x.id, tabindex: 0, role: 'button', 'aria-label': colLabel(x) }, body);
+    const cx = c * CW + CW / 2, rk = rowKey(x), y = m => rowIdx[rk(m)] * RH + RH / 2, ys = members(x).map(y);
+    el('rect', { class: 'hit', x: c * CW, y: 0, width: CW, height: H }, g);
+    el('line', { x1: cx, x2: cx, y1: Math.min(...ys), y2: Math.max(...ys), stroke: `var(--${x.cls})`, 'stroke-width': 1.6 }, g);
+    x.tgt.forEach(m => mark(g, x.cls, cx, y(m)));
+    x.src.forEach(m => el('circle', { cx, cy: y(m), r: 4.2, fill: 'var(--ink)' }, g));
+    el('title', {}, g).textContent = (cmp ? `[${orgName(x.sp)}] ` : '') + colLabel(x);
+  });
+
+  document.getElementById('colhead').replaceChildren(head);
+  document.getElementById('body').replaceChildren(body);
+  document.getElementById('rowlabs').innerHTML = rows.map(r =>
+    `<button type="button" class="rowlab" data-k="${esc(r.k)}">${cmp ? `<span class="sp">${ORGS.map(o => `<i${r.by[o] ? ` style="background:${orgColor(o)}"` : ''}></i>`).join('')}</span>` : ''}${r.dz ? '<span class="dz"></span>' : ''}<span class="nm">${esc(r.name)}</span><span class="hs">${esc(r.sub)}</span></button>`).join('');
+  paint();
+}
+
+function paint() {
+  const s = state.sel, q = state.q.trim().toUpperCase();
+  const selIx = s && s.kind === 'ix' ? BYID[s.id] : null;
+  document.querySelectorAll('.col').forEach(n => {
+    const x = BYID[n.dataset.id];
+    n.classList.toggle('dim', !!s && s.kind === 'row' && !rowKeys(x).includes(s.id));
+    n.classList.toggle('sel', !!selIx && selIx.id === x.id);
+    n.classList.toggle('cp', !!selIx && selIx.cp.includes(x.id));
+  });
+  const hot = selIx ? new Set(rowKeys(selIx)) : new Set();
+  document.querySelectorAll('.rowlab').forEach(n => {
+    const r = rows[rowIdx[n.dataset.k]];
+    n.classList.toggle('sel', !!s && s.kind === 'row' && s.id === r.k);
+    n.classList.toggle('hot', hot.has(r.k));
+    n.classList.toggle('match', !!q && [...rowNames(r), r.sub].some(v => v.toUpperCase().includes(q)));
+  });
+  detail();
+}
+
+/* ---- detail pane ---- */
+function refHtml(r) {
+  const L = t();
+  const href = r.pmid ? `https://pubmed.ncbi.nlm.nih.gov/${r.pmid}/` : (r.url || `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(r.label)}`);
+  const tail = r.pmid ? ` <span class="meta">PMID ${r.pmid}</span>` : (r.url ? '' : ` <span class="meta">${L.searchLink}</span>`);
+  const flag = r.checked ? '' : ` <span class="meta">・${L.unchecked}</span>`;
+  return `<li><a href="${esc(href)}" target="_blank" rel="noopener">${esc(r.label)}</a>${tail}${flag}</li>`;
+}
+const ext = (href, text) => `<a href="${esc(href)}" target="_blank" rel="noopener">${text}</a>`;
+const hsLinks = h => `<div class="links">${ext(`https://www.genenames.org/tools/search/#!/?query=${h}`, 'HGNC')}
+  ${ext(`https://www.ncbi.nlm.nih.gov/clinvar/?term=${h}%5Bgene%5D`, 'ClinVar')}
+  ${ext(`https://grch38.togovar.org/?mode=simple&term=${h}`, 'TogoVar')}
+  ${ext(`https://www.alliancegenome.org/search?q=${h}`, 'Alliance')}
+  ${ext(`https://www.ncbi.nlm.nih.gov/gene/?term=${h}%5Bsym%5D+AND+human%5Borgn%5D`, 'NCBI Gene')}</div>`;
+const dzHtml = h => (D.disease[h] ? `<p style="margin:3px 0 4px"><span class="dz" style="margin-right:5px"></span>${esc(D.disease[h][state.lang])}</p>` : '');
+const relName = r => (r === 'functional' ? t().func : t().ortho);
+function otherLink(o, g) {   // a gene of a non-human organism, linked to its database
+  const id = (D.orgs[o] && D.orgs[o].genes[g] && D.orgs[o].genes[g].id) || g;
+  const href = o === 'sce' ? `https://www.yeastgenome.org/locus/${id}` : `https://www.alliancegenome.org/search?q=${id}`;
+  return `${ext(href, `<span class="gene">${esc(g)}</span>`)}${id !== g ? ` <span class="meta">${esc(id)}</span>` : ''}`;
+}
+function humanGeneHtml(h) {
+  const r = REV[h] || [];
+  const os = r.length ? `<p style="margin:3px 0 4px">${r.map(o => `${o.rel === 'functional' ? '≈' : '←'} ${otherLink(o.org, o.g)} <span class="meta">${orgName(o.org)}・${relName(o.rel)}</span>`).join('<br>')}</p>` : '';
+  return `<li><span class="gene">${h}</span>${dzHtml(h)}${os}${hsLinks(h)}</li>`;
+}
+function otherGeneHtml(o, g) {
+  const m = (ORTH[o] || {})[g];
+  if (!m) return `<li>${otherLink(o, g)} <span class="meta">・${orgName('hsa')}: ${t().none}</span></li>`;
+  return `<li>${otherLink(o, g)}${m.human.map(h => `<p style="margin:4px 0 0">${m.rel === 'functional' ? '≈' : '→'} <span class="gene">${h}</span> <span class="meta">${relName(m.rel)}</span></p>${dzHtml(h)}${hsLinks(h)}`).join('')}</li>`;
+}
+const geneList = (o, gs) => gs.map(g => (o === 'hsa' ? humanGeneHtml(g) : otherGeneHtml(o, g))).join('');
+const phaseText = x => (x.ph[0] === x.ph[1] ? phase(x.ph[0]) : t().range(phase(x.ph[0]), phase(x.ph[1])));
+const orgPill = o => `<span class="pill org" style="background:${orgColor(o)};border-color:${orgColor(o)}">${orgName(o)}</span>`;
+const ixBtn = x => `<li><button type="button" class="ixbtn" data-ix="${x.id}">${orgPill(x.sp)}<span class="gene">${x.src.join('+')}</span> → <span class="gene">${x.tgt.join('+')}</span><br><span class="meta">${phase(x.ph[0])} ・ ${esc(x.type)}</span></button></li>`;
+
+function detail() {
+  const box = document.getElementById('detail'), s = state.sel, L = t();
+  const foot = `<p class="note">${L.foot(D.built)}</p>`;
+  if (!s) { box.innerHTML = `<h2>${L.pick}</h2><p class="meta">${L.showing(cols.length, rows.length)}</p>${foot}`; return; }
+  if (s.kind === 'ix') {
+    const x = BYID[s.id];
+    box.innerHTML = `<p class="meta">${x.id} ・ ${esc(x.module)}</p>
+      <h2><span class="gene">${x.src.join(' + ')}</span> → <span class="gene">${x.tgt.join(' + ')}</span></h2>
+      <p style="margin-top:6px">${orgPill(x.sp)}<span class="pill ${x.cls}">${L[x.cls]}</span></p>
+      <p class="meta">${esc(x.type)} ・ ${phaseText(x)}</p>
+      <h3>${L.what}</h3><p>${esc(x.desc[state.lang])}</p>
+      <h3>${L.refs}</h3><ul>${x.refs.map(refHtml).join('')}</ul>
+      <p class="meta" style="margin-top:6px">${L.shown}: ${x.shown.map(orgName).join('、')}</p>
+      <h3>${L.status}</h3><p><span class="pill ${x.curation}">${L.manual[x.curation]}</span></p>
+      ${x.evidence.length ? `<ul>${x.evidence.map(e => `<li class="meta">${esc(e)}</li>`).join('')}</ul>` : `<p class="meta">${L.noEvidence}</p>`}
+      <h3>${L.cp(x.sp === 'hsa')}</h3>${x.cp.length ? `<ul>${x.cp.map(id => ixBtn(BYID[id])).join('')}</ul>` : `<p class="meta">${L.noCp}</p>`}
+      <h3>${L.genes}</h3><ul>${geneList(x.sp, members(x))}</ul>${foot}`;
+  } else {
+    const r = rows[rowIdx[s.id]], list = cols.filter(x => rowKeys(x).includes(s.id));
+    const single = rowNames(r).length === 1;
+    const title = [r.name, state.mode === 'cmp' ? r.sub : ''].filter(Boolean).map(v => `<span class="gene">${esc(v)}</span>`).join(' <span class="meta">・</span> ');
+    box.innerHTML = `<p class="meta">${single ? L.gene : L.group}</p><h2>${title}</h2>
+      ${ORGS.filter(o => r.by[o]).map(o => `<h3>${orgName(o)}</h3><ul>${geneList(o, r.by[o])}</ul>`).join('')}
+      <h3>${L.involved(list.length)}</h3><ul>${list.map(ixBtn).join('')}</ul>${foot}`;
+  }
+}
+
+/* ---- interaction ---- */
+function scrollTo(kind, id) {
+  const sc = document.getElementById('scroller');
+  if (kind === 'ix') { const c = cols.findIndex(x => x.id === id); if (c >= 0) sc.scrollLeft = Math.max(0, c * CW - sc.clientWidth / 3); }
+  else if (rowIdx[id] != null) sc.scrollTop = Math.max(0, rowIdx[id] * RH - sc.clientHeight / 3);
+}
+function select(kind, id, scroll) {
+  state.sel = state.sel && state.sel.kind === kind && state.sel.id === id ? null : { kind, id };
+  paint();
+  document.getElementById('detail').scrollTop = 0;
+  if (scroll && state.sel) scrollTo(kind, id);
+}
+function keepSelection() {
+  const s = state.sel; if (!s) return;
+  if (s.kind === 'ix' ? !cols.some(x => x.id === s.id) : rowIdx[s.id] == null) state.sel = null;
+}
+function wire() {
+  document.getElementById('body').addEventListener('click', e => { const c = e.target.closest('.col'); if (c) select('ix', c.dataset.id); });
+  document.getElementById('body').addEventListener('keydown', e => { const c = e.target.closest('.col'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); select('ix', c.dataset.id); } });
+  document.getElementById('rowlabs').addEventListener('click', e => { const b = e.target.closest('.rowlab'); if (b) select('row', b.dataset.k); });
+  document.getElementById('detail').addEventListener('click', e => {
+    const b = e.target.closest('.ixbtn'); if (!b) return;
+    const x = BYID[b.dataset.ix];
+    if (!cols.includes(x)) { state.mode = 'cmp'; state.cf = 'all'; state.sel = null; render(); }
+    state.sel = null; select('ix', x.id, true);
+  });
+  document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => {
+    state.lang = b.dataset.lang;
+    try { localStorage.setItem('cc-lang', state.lang); } catch (e) {}
+    const sc = document.getElementById('scroller'), x = sc.scrollLeft, y = sc.scrollTop;
+    render(); sc.scrollLeft = x; sc.scrollTop = y;
+  }));
+  document.getElementById('modes').addEventListener('click', e => {
+    const b = e.target.closest('[data-mode]'); if (!b) return;
+    if (state.sel && state.sel.kind === 'row') state.sel = null;
+    state.mode = b.dataset.mode; layout(); keepSelection(); render();
+    const sc = document.getElementById('scroller'); sc.scrollLeft = 0; sc.scrollTop = 0;
+    if (state.sel) scrollTo('ix', state.sel.id);
+  });
+  document.querySelectorAll('[data-cf]').forEach(b => b.addEventListener('click', () => { state.cf = b.dataset.cf; layout(); keepSelection(); render(); }));
+  document.getElementById('ledeBtn').addEventListener('click', () => {
+    state.lede = !state.lede;
+    try { localStorage.setItem('cc-lede', state.lede ? 'on' : 'off'); } catch (e) {}
+    chrome();
+  });
+  const q = document.getElementById('q');
+  q.addEventListener('input', () => { state.q = q.value; paint(); });
+  q.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const k = q.value.trim().toUpperCase(); if (!k) return;
+    const hit = rows.find(r => rowNames(r).includes(k)) || rows.find(r => r.sub.toUpperCase().split(/[\/ ≈·]+/).includes(k)) || rows.find(r => [...rowNames(r), r.sub].some(v => v.toUpperCase().includes(k)));
+    if (hit) { state.sel = null; select('row', hit.k, true); }
+  });
+}
+
+fetch('cellcycle.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(start, () => {
+  document.querySelector('main').innerHTML = `<p class="fail">${T[state.lang].fail}</p>`;
+  document.getElementById('lede').hidden = true; document.getElementById('ledeBtn').hidden = true;
+});
+function start(data) {
+  prepare(data);
+  wire();
+  const first = IX.find(x => x.sp === 'hsa' && x.cp.length) || IX[0];
+  state.sel = first ? { kind: 'ix', id: first.id } : null;
+  render();
+}
+</script>
+</body>
+</html>
