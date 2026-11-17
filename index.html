@@ -154,6 +154,11 @@ aside a { color: var(--accent); }
   <aside id="detail" aria-live="polite"></aside>
 </main>
 <script>
+// Link target of every human gene symbol (HGNC) shown in the right-hand panel: this prefix + the symbol.
+// Change the destination here only.
+//const HGNC_LINK_PREFIX = 'https://www.genecards.org/card/';
+const HGNC_LINK_PREFIX = 'https://dx.dbcls.jp/dive/v2/gene.html?view=wiki#';
+
 const T = {
   ja: {
     lede: 'ヒトの細胞周期の相互作用を起きる順に列として、遺伝子を登場順に行として並べています。横棒はその遺伝子が関わる期間、縦線は1つの相互作用で、丸が作用する側、印が受ける側です。「比較」ではヒト遺伝子の行に他の生物種の対応遺伝子を重ね、各生物種の相互作用を同じ時間軸に並べます。',
@@ -385,6 +390,8 @@ const hsLinks = h => `<div class="links">${ext(`https://www.genenames.org/tools/
   ${ext(`https://grch38.togovar.org/?mode=simple&term=${h}`, 'TogoVar')}
   ${ext(`https://www.alliancegenome.org/search?q=${h}`, 'Alliance')}
   ${ext(`https://www.ncbi.nlm.nih.gov/gene/?term=${h}%5Bsym%5D+AND+human%5Borgn%5D`, 'NCBI Gene')}</div>`;
+const hs = h => `<a class="gene" href="${esc(HGNC_LINK_PREFIX + encodeURIComponent(h))}" target="_blank" rel="noopener">${esc(h)}</a>`;
+const geneNames = (o, gs, sep) => gs.map(g => (o === 'hsa' ? hs(g) : `<span class="gene">${esc(g)}</span>`)).join(sep);
 const dzHtml = h => (D.disease[h] ? `<p style="margin:3px 0 4px"><span class="dz" style="margin-right:5px"></span>${esc(D.disease[h][state.lang])}</p>` : '');
 const relName = r => (r === 'functional' ? t().func : t().ortho);
 function otherLink(o, g) {   // a gene of a non-human organism, linked to its database
@@ -395,12 +402,12 @@ function otherLink(o, g) {   // a gene of a non-human organism, linked to its da
 function humanGeneHtml(h) {
   const r = REV[h] || [];
   const os = r.length ? `<p style="margin:3px 0 4px">${r.map(o => `${o.rel === 'functional' ? '≈' : '←'} ${otherLink(o.org, o.g)} <span class="meta">${orgName(o.org)}・${relName(o.rel)}</span>`).join('<br>')}</p>` : '';
-  return `<li><span class="gene">${h}</span>${dzHtml(h)}${os}${hsLinks(h)}</li>`;
+  return `<li>${hs(h)}${dzHtml(h)}${os}${hsLinks(h)}</li>`;
 }
 function otherGeneHtml(o, g) {
   const m = (ORTH[o] || {})[g];
   if (!m) return `<li>${otherLink(o, g)} <span class="meta">・${orgName('hsa')}: ${t().none}</span></li>`;
-  return `<li>${otherLink(o, g)}${m.human.map(h => `<p style="margin:4px 0 0">${m.rel === 'functional' ? '≈' : '→'} <span class="gene">${h}</span> <span class="meta">${relName(m.rel)}</span></p>${dzHtml(h)}${hsLinks(h)}`).join('')}</li>`;
+  return `<li>${otherLink(o, g)}${m.human.map(h => `<p style="margin:4px 0 0">${m.rel === 'functional' ? '≈' : '→'} ${hs(h)} <span class="meta">${relName(m.rel)}</span></p>${dzHtml(h)}${hsLinks(h)}`).join('')}</li>`;
 }
 const geneList = (o, gs) => gs.map(g => (o === 'hsa' ? humanGeneHtml(g) : otherGeneHtml(o, g))).join('');
 const phaseText = x => (x.ph[0] === x.ph[1] ? phase(x.ph[0]) : t().range(phase(x.ph[0]), phase(x.ph[1])));
@@ -414,7 +421,7 @@ function detail() {
   if (s.kind === 'ix') {
     const x = BYID[s.id];
     box.innerHTML = `<p class="meta">${x.id} ・ ${esc(x.module)}</p>
-      <h2><span class="gene">${x.src.join(' + ')}</span> → <span class="gene">${x.tgt.join(' + ')}</span></h2>
+      <h2>${geneNames(x.sp, x.src, ' + ')} → ${geneNames(x.sp, x.tgt, ' + ')}</h2>
       <p style="margin-top:6px">${orgPill(x.sp)}<span class="pill ${x.cls}">${L[x.cls]}</span></p>
       <p class="meta">${esc(x.type)} ・ ${phaseText(x)}</p>
       <h3>${L.what}</h3><p>${esc(x.desc[state.lang])}</p>
@@ -427,7 +434,7 @@ function detail() {
   } else {
     const r = rows[rowIdx[s.id]], list = cols.filter(x => rowKeys(x).includes(s.id));
     const single = rowNames(r).length === 1;
-    const title = [r.name, state.mode === 'cmp' ? r.sub : ''].filter(Boolean).map(v => `<span class="gene">${esc(v)}</span>`).join(' <span class="meta">・</span> ');
+    const title = ORGS.filter(o => r.by[o]).map(o => geneNames(o, r.by[o], '/')).join(' <span class="meta">・</span> ');
     box.innerHTML = `<p class="meta">${single ? L.gene : L.group}</p><h2>${title}</h2>
       ${ORGS.filter(o => r.by[o]).map(o => `<h3>${orgName(o)}</h3><ul>${geneList(o, r.by[o])}</ul>`).join('')}
       <h3>${L.involved(list.length)}</h3><ul>${list.map(ixBtn).join('')}</ul>${foot}`;
