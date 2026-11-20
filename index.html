@@ -7,15 +7,19 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Layout idea: one time-ordered matrix. Columns = interactions in order of occurrence,
-   rows = human genes (in Compare: human genes with their counterparts in other organisms) in order of first appearance;
-   a bar per row spans its active window. Detail pane at right.
-   Organisms are told apart by dedicated hues, effects by four semantic hues. Data come from cellcycle.json (build.rb). */
+/* Layout idea: one time-ordered matrix. Columns = interactions in order of occurrence (grouped by phase & functional module),
+   rows = human genes (in Compare: human genes with their counterparts in other organisms) in order of first appearance
+   or grouped by functional cluster; a bar per row spans its active window. Detail pane at right renders evidence/*.md. */
 :root {
   --bg: #f4f6f8; --panel: #ffffff; --ink: #18222d; --muted: #5d6b79; --line: #d5dce3;
   --bar: #c9d3dd; --band-a: #eef2f6; --band-b: #f8fafb; --accent: #0b6e8a; --accent-soft: #dceff4;
   --act: #1f8a55; --inh: #c4442a; --mod: #3565b0; --bind: #6a7582; --disease: #a8327a; --todo: #b7791f;
   --hsa: #6b4fbb; --o1: #b7791f; --o2: #1d8a8a; --o3: #c0527a; --o4: #5f7f2e; --o5: #4a6fa5;
+  /* Functional category palette */
+  --cat-tx: #0d7a8a; --cat-cdk: #2b59b5; --cat-rep: #1f8a55; --cat-deg: #c26a1b;
+  --cat-chk: #c83349; --cat-sac: #7b4bb7; --cat-exit: #4d7c2b;
+  /* Discovery era palette */
+  --era-90: #5b6b7c; --era-00: #2b7bba; --era-10: #0d8a6a; --era-20: #b84b8c;
   --display: "IBM Plex Sans JP", "Hiragino Sans", "Noto Sans JP", sans-serif;
   --body: "IBM Plex Sans JP", "Hiragino Sans", "Noto Sans JP", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -25,24 +29,32 @@
     --bg: #11171d; --panel: #18212a; --ink: #e4eaf0; --muted: #93a1af; --line: #2c3945;
     --bar: #3a4a5a; --band-a: #1c2630; --band-b: #18212a; --accent: #4fb6d1; --accent-soft: #17343d;
     --act: #4cc38a; --inh: #f0795f; --mod: #7aa5ea; --bind: #9aa6b3; --disease: #e07ab8; --todo: #e0a94a;
-    --hsa: #a892ee; --o1: #e0a94a; --o2: #4fc4c4; --o3: #ea8fb0; --o4: #a3c56a; --o5: #8fb0e0; color-scheme: dark;
+    --hsa: #a892ee; --o1: #e0a94a; --o2: #4fc4c4; --o3: #ea8fb0; --o4: #a3c56a; --o5: #8fb0e0;
+    --cat-tx: #46bcd1; --cat-cdk: #739ef5; --cat-rep: #4cc38a; --cat-deg: #eea04e;
+    --cat-chk: #f56e82; --cat-sac: #b48cf2; --cat-exit: #8ecf5f;
+    --era-90: #8fa1b3; --era-00: #63aee8; --era-10: #46c9a7; --era-20: #e884be;
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #11171d; --panel: #18212a; --ink: #e4eaf0; --muted: #93a1af; --line: #2c3945;
   --bar: #3a4a5a; --band-a: #1c2630; --band-b: #18212a; --accent: #4fb6d1; --accent-soft: #17343d;
   --act: #4cc38a; --inh: #f0795f; --mod: #7aa5ea; --bind: #9aa6b3; --disease: #e07ab8; --todo: #e0a94a;
-  --hsa: #a892ee; --o1: #e0a94a; --o2: #4fc4c4; --o3: #ea8fb0; --o4: #a3c56a; --o5: #8fb0e0; color-scheme: dark;
+  --hsa: #a892ee; --o1: #e0a94a; --o2: #4fc4c4; --o3: #ea8fb0; --o4: #a3c56a; --o5: #8fb0e0;
+  --cat-tx: #46bcd1; --cat-cdk: #739ef5; --cat-rep: #4cc38a; --cat-deg: #eea04e;
+  --cat-chk: #f56e82; --cat-sac: #b48cf2; --cat-exit: #8ecf5f;
+  --era-90: #8fa1b3; --era-00: #63aee8; --era-10: #46c9a7; --era-20: #e884be;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.6;
   display: flex; flex-direction: column; }
-header { padding: 12px 20px 10px; display: flex; flex-direction: column; gap: 7px; border-bottom: 1px solid var(--line); background: var(--panel); }
+header { padding: 10px 20px 8px; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid var(--line); background: var(--panel); }
 .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 h1 { font-family: var(--display); font-size: 19px; font-weight: 700; margin: 0; letter-spacing: .01em; }
-.lede { margin: 0; color: var(--muted); font-size: 13px; max-width: 78ch; }
-.titlerow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lede { margin: 0; color: var(--muted); font-size: 13px; max-width: 86ch; }
+.titlerow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .guide { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 12px; font-weight: 600; line-height: 1; padding: 5px 10px 5px 8px;
   border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--muted); cursor: pointer; white-space: nowrap;
   transition: background .15s, color .15s, border-color .15s; }
@@ -51,27 +63,35 @@ h1 { font-family: var(--display); font-size: 19px; font-weight: 700; margin: 0; 
 .guide .chev { transition: transform .2s; }
 .guide[aria-expanded="true"] .chev { transform: rotate(180deg); }
 @media (prefers-reduced-motion: reduce) { .guide, .guide .chev { transition: none; } }
-.controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; flex: none; }
-.seg button { font: inherit; font-size: 13px; padding: 4px 11px; border: 0; background: var(--panel); color: var(--ink); cursor: pointer; border-right: 1px solid var(--line); white-space: nowrap; }
+.controls { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.ctrl-group { display: inline-flex; align-items: center; gap: 5px; }
+.ctrl-label { font-size: 11.5px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; flex: none; flex-wrap: wrap; }
+.seg button { font: inherit; font-size: 12.5px; padding: 3px 10px; border: 0; background: var(--panel); color: var(--ink); cursor: pointer; border-right: 1px solid var(--line); white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
 .seg button:last-child { border-right: 0; }
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); font-weight: 600; }
-.seg.sub button { font-size: 12px; padding: 3px 9px; }
-#q { font: inherit; font-size: 13px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); width: 230px; }
+.seg.sub button { font-size: 11.5px; padding: 2.5px 8px; }
+.cat-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.seg button[aria-pressed="true"] .cat-dot { box-shadow: 0 0 0 1.5px var(--panel); }
+#q { font: inherit; font-size: 12.5px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); width: 210px; }
 button:focus-visible, .guide:focus-visible, #q:focus-visible, a:focus-visible, .col:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.legend { display: flex; flex-wrap: wrap; gap: 3px 14px; font-size: 12px; color: var(--muted); align-items: center; }
+.legend { display: flex; flex-wrap: wrap; gap: 3px 13px; font-size: 11.5px; color: var(--muted); align-items: center; }
 .legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .legend svg { flex: none; }
 [hidden] { display: none !important; }
 main { flex: 1; min-height: 0; display: flex; }
-.scroller { flex: 1; min-width: 0; overflow: auto; display: grid; grid-template-columns: var(--labw, 180px) max-content; grid-template-rows: max-content max-content; background: var(--panel); align-content: start; }
+.scroller { flex: 1; min-width: 0; overflow: auto; display: grid; grid-template-columns: var(--labw, 246px) max-content; grid-template-rows: max-content max-content; background: var(--panel); align-content: start; }
 .corner { position: sticky; top: 0; left: 0; z-index: 3; background: var(--panel); border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
-  font-size: 11px; color: var(--muted); padding: 4px 8px; display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; line-height: 1.35; }
+  font-size: 11px; color: var(--muted); padding: 4px 8px; display: flex; flex-direction: column; justify-content: space-between; gap: 2px; line-height: 1.3; }
+.corner-top { display: flex; justify-content: space-between; width: 100%; font-size: 10.5px; color: var(--muted); white-space: nowrap; gap: 6px; }
+.corner-bot { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; gap: 6px; white-space: nowrap; }
 .colhead { position: sticky; top: 0; z-index: 2; background: var(--panel); border-bottom: 1px solid var(--line); line-height: 0; }
 .rowlabs { position: sticky; left: 0; z-index: 1; background: var(--panel); border-right: 1px solid var(--line); }
-.rowlab { display: flex; align-items: center; gap: 5px; width: 100%; height: 20px; padding: 0 8px 0 6px; border: 0; background: none; color: var(--ink);
+.rowlab { display: flex; align-items: center; gap: 5px; width: 100%; height: 20px; padding: 0 8px 0 6px; border: 0; border-left: 3px solid transparent; background: none; color: var(--ink);
   font: 500 12px/1 var(--mono); cursor: pointer; text-align: left; white-space: nowrap; overflow: hidden; }
+.rowlab.cat-start { border-top: 1px solid var(--line); }
 .rowlab .nm { overflow: hidden; text-overflow: ellipsis; }
+.rowlab .cat-tag { font-family: var(--body); font-size: 10px; font-weight: 600; padding: 1px 4px; border-radius: 3px; color: var(--panel); flex: none; line-height: 1.1; }
 .rowlab .hs { font-weight: 400; color: var(--muted); font-size: 11px; margin-left: auto; overflow: hidden; text-overflow: ellipsis; padding-left: 6px; text-align: right; }
 .dz { display: inline-block; width: 6px; height: 6px; border-radius: 1px; background: var(--disease); flex: none; }
 .sp { display: inline-flex; gap: 1px; flex: none; }
@@ -79,38 +99,76 @@ main { flex: 1; min-height: 0; display: flex; }
 .rowlab:hover, .rowlab.hot { background: var(--accent-soft); }
 .rowlab.sel { background: var(--accent); color: var(--panel); }
 .rowlab.sel .hs { color: var(--panel); }
+.rowlab.dim { opacity: .28; }
 .rowlab.match { box-shadow: inset 0 -2px 0 var(--accent); }
 svg text { font-family: var(--body); fill: var(--ink); }
 .col { cursor: pointer; }
-.col.dim { opacity: .16; }
+.col.dim { opacity: .14; }
 .col .hit { fill: transparent; }
 .col:hover .hit { fill: var(--accent); fill-opacity: .1; }
 .col.sel .hit { fill: var(--accent); fill-opacity: .22; }
 .col.cp .hit { fill: var(--accent); fill-opacity: .12; }
-aside { width: 370px; flex: none; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 16px 18px 28px; }
+.cat-band { cursor: pointer; }
+.cat-band:hover rect.band-bg { fill-opacity: .28; }
+
+/* Right detail pane */
+aside { width: 480px; flex: none; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 14px 18px 32px; transition: width .18s ease; }
+aside.wide { width: 680px; }
+.aside-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+.wide-btn { font: inherit; font-size: 11px; font-weight: 600; padding: 2px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--band-b); color: var(--muted); cursor: pointer; white-space: nowrap; }
+.wide-btn:hover { color: var(--accent); border-color: var(--accent); }
 aside h2 { font-family: var(--display); font-size: 16px; margin: 0 0 2px; line-height: 1.4; text-wrap: balance; overflow-wrap: anywhere; }
-aside h3 { font-size: 12px; font-weight: 600; color: var(--muted); margin: 16px 0 5px; letter-spacing: .04em; }
+aside h3 { font-size: 12px; font-weight: 600; color: var(--muted); margin: 16px 0 6px; letter-spacing: .04em; display: flex; align-items: center; justify-content: space-between; }
 aside p { margin: 0 0 6px; }
 .gene { font-family: var(--mono); font-weight: 600; }
 .pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); margin-right: 5px; white-space: nowrap; }
 .pill.act { border-color: var(--act); color: var(--act); } .pill.inh { border-color: var(--inh); color: var(--inh); }
 .pill.mod { border-color: var(--mod); color: var(--mod); } .pill.bind { border-color: var(--bind); color: var(--bind); }
 .pill.org { color: var(--panel); }
+.pill.cat { color: var(--panel); border-color: transparent; }
+.pill.year { font-family: var(--mono); font-weight: 600; background: var(--band-a); color: var(--ink); }
 .pill.DONE { border-color: var(--act); color: var(--act); } .pill.TODO { border-color: var(--todo); color: var(--todo); }
 .meta { color: var(--muted); font-size: 12px; }
-aside ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
-aside li { padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; overflow-wrap: anywhere; }
-aside a { color: var(--accent); }
+aside ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+aside li { padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; overflow-wrap: anywhere; background: var(--panel); }
+aside a { color: var(--accent); text-decoration: none; }
+aside a:hover { text-decoration: underline; }
 .links { display: flex; flex-wrap: wrap; gap: 3px 10px; font-size: 12px; }
 .ixbtn { font: inherit; font-size: 12px; text-align: left; width: 100%; border: 0; background: none; color: var(--ink); cursor: pointer; padding: 0; }
 .ixbtn:hover { color: var(--accent); }
 .note { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); margin-top: 18px; padding-top: 10px; }
 .fail { margin: 24px; max-width: 70ch; }
 .fail code { font-family: var(--mono); background: var(--band-a); padding: 1px 5px; border-radius: 4px; }
-@media (max-width: 860px) {
+
+/* Reference card & Rendered Evidence Markdown */
+.ref-card { padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--band-b); }
+.ref-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ref-title-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.yr-badge { font-family: var(--mono); font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; color: var(--panel); flex: none; }
+.ref-cite { font-weight: 600; font-size: 13px; color: var(--ink); }
+.ref-actions { display: flex; align-items: center; gap: 6px; flex: none; }
+.pmid-link { font-family: var(--mono); font-size: 11px; padding: 2px 7px; border-radius: 4px; border: 1px solid var(--line); background: var(--panel); color: var(--accent); white-space: nowrap; }
+.ev-toggle { font: inherit; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent); cursor: pointer; white-space: nowrap; }
+.ev-toggle[aria-expanded="true"] { background: var(--accent); color: var(--panel); }
+
+.ev-box { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--line); font-size: 12.8px; line-height: 1.62; color: var(--ink); }
+.ev-box h4.ev-paper-title { font-size: 13.5px; font-weight: 700; margin: 0 0 6px; color: var(--ink); line-height: 1.4; }
+.ev-meta-grid { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--muted); margin-bottom: 8px; padding: 5px 8px; background: var(--panel); border-radius: 5px; border: 1px solid var(--line); }
+.ev-meta-grid span strong { color: var(--ink); }
+.ev-sec-title { font-size: 11.5px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; margin: 10px 0 4px; }
+.ev-summary { margin: 0 0 8px; padding: 6px 9px; background: var(--panel); border-radius: 5px; border: 1px solid var(--line); }
+.ev-ix-block { margin: 7px 0; padding: 7px 9px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); }
+.ev-ix-block.active-ix { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.ev-ix-head { font-family: var(--mono); font-size: 11.5px; font-weight: 600; margin-bottom: 4px; color: var(--ink); }
+.ev-field { margin: 4px 0; font-size: 12.2px; }
+.ev-field-label { font-weight: 600; color: var(--muted); }
+.ev-quote { margin: 5px 0; padding: 6px 10px; border-left: 3px solid var(--accent); background: var(--band-a); border-radius: 0 5px 5px 0; font-style: italic; font-size: 12.2px; color: var(--ink); }
+.ev-box code { font-family: var(--mono); font-size: 11.5px; background: var(--band-a); padding: 1px 4px; border-radius: 3px; }
+
+@media (max-width: 960px) {
   main { flex-direction: column; }
-  aside { width: auto; border-left: 0; border-top: 1px solid var(--line); max-height: 45%; }
-  .scroller { --labw: 130px !important; }
+  aside, aside.wide { width: auto; border-left: 0; border-top: 1px solid var(--line); max-height: 50%; }
+  .scroller { --labw: 145px !important; }
   .rowlab .hs { display: none; }
 }
 </style>
@@ -140,13 +198,37 @@ aside a { color: var(--accent); }
       <button type="button" data-cf="hsa" data-t="fHsa"></button>
       <button type="button" data-cf="other" data-t="fOther"></button>
     </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label" data-t="rowOrderLbl"></span>
+      <div class="seg sub" role="group" id="roworder">
+        <button type="button" data-ro="time" data-t="roTime" aria-pressed="true"></button>
+        <button type="button" data-ro="cat" data-t="roCat" aria-pressed="false"></button>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label" data-t="eraLbl"></span>
+      <div class="seg sub" role="group" id="eraf">
+        <button type="button" data-era="all" data-t="eraAll" aria-pressed="true"></button>
+        <button type="button" data-era="1990" aria-pressed="false"><span class="cat-dot" style="background:var(--era-90)"></span>〜1999</button>
+        <button type="button" data-era="2000" aria-pressed="false"><span class="cat-dot" style="background:var(--era-00)"></span>2000s</button>
+        <button type="button" data-era="2010" aria-pressed="false"><span class="cat-dot" style="background:var(--era-10)"></span>2010s</button>
+        <button type="button" data-era="2020" aria-pressed="false"><span class="cat-dot" style="background:var(--era-20)"></span>2020s</button>
+      </div>
+    </div>
     <input id="q" type="search">
+  </div>
+  <div class="controls">
+    <span class="ctrl-label" data-t="catLbl"></span>
+    <div class="seg sub" role="group" id="catf"></div>
   </div>
   <div class="legend" id="legend"></div>
 </header>
 <main>
   <div class="scroller" id="scroller">
-    <div class="corner"><span id="cornerA"></span><span id="cornerB"></span></div>
+    <div class="corner">
+      <div class="corner-top"><span id="cornerTrack1"></span><span id="cornerTrack2"></span></div>
+      <div class="corner-bot"><span id="cornerA"></span><span id="cornerB"></span></div>
+    </div>
     <div class="colhead" id="colhead"></div>
     <div class="rowlabs" id="rowlabs"></div>
     <div id="body"></div>
@@ -154,84 +236,151 @@ aside a { color: var(--accent); }
   <aside id="detail" aria-live="polite"></aside>
 </main>
 <script>
-// Link target of every human gene symbol (HGNC) shown in the right-hand panel: this prefix + the symbol.
-// Change the destination here only.
-//const HGNC_LINK_PREFIX = 'https://www.genecards.org/card/';
 const HGNC_LINK_PREFIX = 'https://dx.dbcls.jp/dive/v2/gene.html?view=wiki#';
+
+const CAT_ORDER = ['tx', 'cdk', 'rep', 'deg', 'chk', 'sac', 'exit'];
+const CAT_COLOR = {
+  tx: 'var(--cat-tx)',
+  cdk: 'var(--cat-cdk)',
+  rep: 'var(--cat-rep)',
+  deg: 'var(--cat-deg)',
+  chk: 'var(--cat-chk)',
+  sac: 'var(--cat-sac)',
+  exit: 'var(--cat-exit)'
+};
 
 const T = {
   ja: {
-    lede: 'ヒトの細胞周期の相互作用を起きる順に列として、遺伝子を登場順に行として並べています。横棒はその遺伝子が関わる期間、縦線は1つの相互作用で、丸が作用する側、印が受ける側です。「比較」ではヒト遺伝子の行に他の生物種の対応遺伝子を重ね、各生物種の相互作用を同じ時間軸に並べます。',
+    lede: '細胞周期の相互作用を起きる時期と機能モジュール順に列として、遺伝子を登場順（または機能クラスタ順）に行として並べています。列ヘッダ2段目は機能アノテーション帯（DNA損傷・複製・SACなど）、3段目は発見年（1989〜2024）を示します。列を選ぶと右パネルに原著論文（evidence/*.md）の要約と抽出エビデンス文をレンダリング表示します。',
     cmpMode: '比較', guide: '図の見方',
     fAll: 'すべて', fBoth: 'ヒトと対応あり', fHsa: 'ヒトのみ', fOther: '他生物種のみ',
-    search: '遺伝子名で探す（例: RB1, WHI5）',
+    rowOrderLbl: '行の並び:', roTime: '登場順（時間軸）', roCat: '機能クラスタ順',
+    catLbl: '機能の意味:', eraLbl: '発見年代:', eraAll: '全年代',
+    cats: {
+      all: 'すべて',
+      tx: '転写制御 (DREAM/E2F/SBF/MMB)',
+      cdk: 'CDK・キナーゼ駆動',
+      rep: 'DNA複製・起点発火',
+      deg: 'ユビキチン分解 (SCF/CRL4/APC)',
+      chk: 'DNA損傷・ストレス応答',
+      sac: 'M期・SAC・染色体分配',
+      exit: '分裂終期 (FEAR/MEN/SPOC)'
+    },
+    catsShort: {
+      tx: '転写',
+      cdk: 'CDK・キナーゼ',
+      rep: 'DNA複製',
+      deg: '分解(SCF/APC)',
+      chk: 'DNA損傷・ストレス',
+      sac: 'SAC・染色体分配',
+      exit: '分裂終期'
+    },
+    search: '遺伝子名・機能で探す（例: RB1, ATM, WHI5）',
     lgSrc: '作用する側', act: '活性化', inh: '抑制・分解', mod: '修飾', bind: '結合', lgDz: 'ヒト遺伝子に疾患メモあり',
     lgIx: n => `${n}の相互作用`, lgOnly: '枠だけ: ヒトとの対応が見つからない',
     org: { hsa: 'ヒト', sce: '酵母', spo: '分裂酵母', dme: 'ハエ', cel: '線虫', xla: 'アフリカツメガエル', mmu: 'マウス', dre: 'ゼブラフィッシュ' },
+    cornerTracks: ['時期 / 機能モジュール / 発見年', '→ 列ヘッダ'],
     cornerGene: n => `${n}遺伝子`, cornerOther: '他生物種の遺伝子', cornerHs: 'ヒト対応（≈ は機能的）', cornerOt: '他生物種での対応',
     phases: ['M/G1〜G1', 'G1/S', 'S期', 'G2/M', '中期（SAC）', '後期', '分裂終期'],
     count: n => `${n}件`, range: (a, b) => `${a} から ${b}`,
     pick: '列か遺伝子名を選んでください', showing: (c, r) => `相互作用 ${c}件、${r}行を表示中。`,
-    what: '反応の内容', refs: '根拠論文', shown: '実証された生物種', unchecked: '書誌未確認', searchLink: 'PubMedで検索',
+    what: '反応の内容', refs: '根拠論文と原著エビデンス', shown: '実証された生物種', unchecked: '書誌未確認', searchLink: 'PubMedで検索',
+    discoveredIn: y => `${y}年報告`,
+    evBtnOpen: 'エビデンスを閉じる', evBtnShow: 'エビデンスを表示', evLoading: '原著エビデンスを読み込み中…', evError: 'エビデンスファイルを読み込めませんでした。',
+    wideOpen: 'パネルを広げる ↔', wideClose: 'パネル幅を戻す ⇥',
     status: '確認状況', manual: { TODO: '文献の手動確認: TODO', DONE: '文献の手動確認: DONE' }, noEvidence: 'KEGG・Reactomeとの照合記録はまだありません。',
-    genes: '遺伝子', none: '対応は未割り当て', ortho: 'オーソログ', func: '機能的な対応',
+    genes: '関与する遺伝子', none: '対応は未割り当て', ortho: 'オーソログ', func: '機能的な対応',
     cp: x => (x ? '他の生物種で対応する相互作用' : 'ヒトで対応する相互作用'), noCp: '対応する相互作用は見つかっていません。',
     gene: '遺伝子', group: 'ヒト遺伝子と他生物種の対応', involved: n => `関わる相互作用（${n}件、起きる順）`,
-    foot: b => `時期の割り当て、生物種間の遺伝子対応、疾患メモは手作業の暫定値です。「対応する相互作用」は、作用する側と受ける側がそれぞれ同じ行に入るものを機械的に拾っています。データ作成日 ${b}。`,
-    headAria: '細胞周期の時期と相互作用の列', bodyAria: '遺伝子と相互作用のマトリクス',
-    fail: 'cellcycle.json を読み込めませんでした。<code>ruby build.rb</code> で作成し、このフォルダをウェブサーバー経由で開いてください（例: <code>python3 -m http.server 8000</code> を実行して <code>http://localhost:8000/</code> を開く）。ブラウザでファイルを直接開いた場合は読み込めません。'
+    foot: b => `時期の割り当て、生物種間の遺伝子対応、疾患メモは手作業の暫定値です。各論文のエビデンスは evidence/*_ja.md / evidence/*.md からレンダリングしています。データ作成日 ${b}。`,
+    headAria: '細胞周期の時期、機能モジュール、発見年代と相互作用の列', bodyAria: '遺伝子と相互作用のマトリクス',
+    fail: 'cellcycle.json を読み込めませんでした。<code>ruby build.rb</code> で作成し、このフォルダをウェブサーバー経由で開いてください（例: <code>python3 -m http.server 8000</code> を実行して <code>http://localhost:8000/</code> を開く）。'
   },
   en: {
-    lede: 'Interactions of the human cell cycle are laid out as columns in the order they occur, genes as rows in order of first appearance. A horizontal bar spans the period a gene is involved. Each vertical line is one interaction: a dot marks the acting side, a symbol the receiving side. Compare adds the counterpart genes of other organisms to the human rows and puts each organism\'s interactions on the same time axis.',
+    lede: 'Interactions of the cell cycle are laid out as columns ordered by phase and functional module; genes are rows ordered by first appearance or grouped by functional cluster. The 2nd header track shows functional annotations (DNA damage, replication, SAC, etc.) and the 3rd track shows discovery years (1989–2024). Selecting a column renders the curated literature evidence (evidence/*.md) in the right panel.',
     cmpMode: 'Compare', guide: 'Guide',
     fAll: 'All', fBoth: 'Matched to human', fHsa: 'Human only', fOther: 'Other organisms only',
-    search: 'Find a gene (e.g. RB1, WHI5)',
+    rowOrderLbl: 'Row order:', roTime: 'Time of appearance', roCat: 'Functional cluster',
+    catLbl: 'Function:', eraLbl: 'Discovery era:', eraAll: 'All years',
+    cats: {
+      all: 'All',
+      tx: 'Transcription (DREAM/E2F/SBF/MMB)',
+      cdk: 'CDK & Kinase Engine',
+      rep: 'DNA Replication & Origins',
+      deg: 'Proteolysis (SCF/CRL4/APC)',
+      chk: 'DNA Damage & Stress Checkpoints',
+      sac: 'Mitosis, SAC & Cohesin',
+      exit: 'Mitotic Exit (FEAR/MEN/SPOC)'
+    },
+    catsShort: {
+      tx: 'Transcription',
+      cdk: 'CDK & Kinase',
+      rep: 'Replication',
+      deg: 'Proteolysis',
+      chk: 'Damage & Stress',
+      sac: 'SAC & Cohesin',
+      exit: 'Mitotic Exit'
+    },
+    search: 'Find a gene or module (e.g. RB1, ATM, WHI5)',
     lgSrc: 'Acting side', act: 'Activation', inh: 'Inhibition / degradation', mod: 'Modification', bind: 'Binding', lgDz: 'Human gene has a disease note',
     lgIx: n => `${n} interaction`, lgOnly: 'Outline only: no match with human found',
     org: { hsa: 'Human', sce: 'Yeast', spo: 'Fission yeast', dme: 'Fly', cel: 'Worm', xla: 'Frog', mmu: 'Mouse', dre: 'Zebrafish' },
+    cornerTracks: ['Phase / Function / Year', '→ Header'],
     cornerGene: n => `${n} gene`, cornerOther: 'Genes of other organisms', cornerHs: 'Human (≈ functional)', cornerOt: 'In other organisms',
     phases: ['M/G1 to G1', 'G1/S', 'S phase', 'G2/M', 'Metaphase (SAC)', 'Anaphase', 'Mitotic exit'],
     count: n => `${n}`, range: (a, b) => `${a} through ${b}`,
     pick: 'Select a column or a gene name', showing: (c, r) => `Showing ${c} interactions on ${r} rows.`,
-    what: 'Reaction', refs: 'Supporting papers', shown: 'Shown in', unchecked: 'citation not checked', searchLink: 'search PubMed',
+    what: 'Reaction', refs: 'Supporting papers & extracted evidence', shown: 'Shown in', unchecked: 'citation not checked', searchLink: 'search PubMed',
+    discoveredIn: y => `Reported ${y}`,
+    evBtnOpen: 'Hide evidence', evBtnShow: 'Show evidence', evLoading: 'Loading paper evidence…', evError: 'Could not load evidence markdown file.',
+    wideOpen: 'Expand panel ↔', wideClose: 'Standard width ⇥',
     status: 'Verification', manual: { TODO: 'Manual literature check: TODO', DONE: 'Manual literature check: DONE' }, noEvidence: 'No KEGG or Reactome check recorded yet.',
-    genes: 'Genes', none: 'no counterpart assigned', ortho: 'orthologue', func: 'functional counterpart',
+    genes: 'Involved genes', none: 'no counterpart assigned', ortho: 'orthologue', func: 'functional counterpart',
     cp: x => (x ? 'Corresponding interactions in other organisms' : 'Corresponding interactions in human'), noCp: 'No corresponding interaction found.',
     gene: 'Gene', group: 'Human gene and counterparts', involved: n => `Interactions involving this row (${n}, in order)`,
-    foot: b => `Phase assignments, cross-species gene correspondences and disease notes are provisional and hand-curated. Corresponding interactions are picked mechanically: the acting and receiving sides must each fall on the same rows. Data built ${b}.`,
-    headAria: 'Cell-cycle phases and interaction columns', bodyAria: 'Matrix of genes and interactions',
-    fail: 'Could not load cellcycle.json. Create it with <code>ruby build.rb</code> and open this folder through a web server (for example run <code>python3 -m http.server 8000</code> and open <code>http://localhost:8000/</code>). It cannot be loaded when the file is opened directly in the browser.'
+    foot: b => `Phase assignments, cross-species gene correspondences and disease notes are hand-curated. Paper summaries and extracted quotes are rendered from evidence/*.md. Data built ${b}.`,
+    headAria: 'Cell-cycle phases, functional modules, discovery years and interaction columns', bodyAria: 'Matrix of genes and interactions',
+    fail: 'Could not load cellcycle.json. Create it with <code>ruby build.rb</code> and open this folder through a web server (for example run <code>python3 -m http.server 8000</code> and open <code>http://localhost:8000/</code>).'
   }
 };
-const CW = 17, RH = 20;
+
+const CW = 18, RH = 20;
 const NS = 'http://www.w3.org/2000/svg';
-const SINGLE = ['hsa', 'sce'];   // organisms that get their own view; all others appear in Compare only
-const state = { lang: 'ja', mode: 'hsa', cf: 'all', sel: null, q: '', lede: true };
-try { const l = localStorage.getItem('cc-lang'); if (l === 'en' || l === 'ja') state.lang = l; state.lede = localStorage.getItem('cc-lede') !== 'off'; } catch (e) {}
+const SINGLE = ['hsa', 'sce'];
+const state = { lang: 'ja', mode: 'hsa', cf: 'all', ro: 'time', cat: 'all', era: 'all', sel: null, q: '', lede: true, wide: false, openEv: {} };
+try {
+  const l = localStorage.getItem('cc-lang'); if (l === 'en' || l === 'ja') state.lang = l;
+  state.lede = localStorage.getItem('cc-lede') !== 'off';
+  state.wide = localStorage.getItem('cc-wide') === 'on';
+} catch (e) {}
 const t = () => T[state.lang];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const el = (n, a = {}, parent) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (parent) parent.appendChild(e); return e; };
 
 let D, ORGS, OTHERS, IX, BYID, ORTH, REV, GROUP, parent;
+const EV_CACHE = {}; // key: `${pmid}_${lang}` -> markdown text
+
 const members = x => [...x.src, ...x.tgt];
 const find = k => (parent[k] === k ? k : (parent[k] = find(parent[k])));
 const gkey = (sp, g) => find(sp + ':' + g);
 const orgName = o => t().org[o] || o;
 const orgColor = o => (o === 'hsa' ? 'var(--hsa)' : `var(--o${(OTHERS.indexOf(o) % 5) + 1})`);
+const catColor = c => CAT_COLOR[c] || 'var(--bind)';
+const eraBucket = y => (!y ? '1990' : (y < 2000 ? '1990' : (y < 2010 ? '2000' : (y < 2020 ? '2010' : '2020'))));
+const eraColor = y => ({ '1990': 'var(--era-90)', '2000': 'var(--era-00)', '2010': 'var(--era-10)', '2020': 'var(--era-20)' }[eraBucket(y)] || 'var(--muted)');
 const relMark = r => (r === 'functional' ? '≈ ' : '');
 
 function prepare(data) {
   D = data;
   ORGS = Object.keys(D.orgs).sort((a, b) => (b === 'hsa') - (a === 'hsa'));
   OTHERS = ORGS.filter(o => o !== 'hsa');
-  IX = ORGS.flatMap(o => D.orgs[o].ix.map(x => ({ ...x, sp: o })));
+  IX = ORGS.flatMap(o => D.orgs[o].ix.map(x => ({ ...x, sp: o, cat: x.cat || 'cdk' })));
   BYID = Object.fromEntries(IX.map(x => [x.id, x]));
-  ORTH = {}; REV = {};   // ORTH[org][gene] = {rel, human:[...]};  REV[human] = [{org, g, rel}]
+  ORTH = {}; REV = {};
   for (const m of D.map) {
     ((ORTH[m.org] ||= {})[m.gene] ||= { rel: m.rel, human: [] }).human.push(m.hsa);
     (REV[m.hsa] ||= []).push({ org: m.org, g: m.gene, rel: m.rel });
   }
-  // rows of Compare: connected components over the human-centred correspondence table, restricted to genes in the data
   parent = {};
   for (const o of ORGS) for (const g in D.orgs[o].genes) parent[o + ':' + g] = o + ':' + g;
   for (const m of D.map) if (parent[m.org + ':' + m.gene] && parent['hsa:' + m.hsa]) parent[find(m.org + ':' + m.gene)] = find('hsa:' + m.hsa);
@@ -246,6 +395,7 @@ function prepare(data) {
 const rowKey = x => g => (state.mode === 'cmp' ? gkey(x.sp, g) : g);
 const rowKeys = x => members(x).map(rowKey(x));
 const phase = i => t().phases[i];
+
 function rowInfo(k) {
   if (state.mode === 'hsa') {
     const r = REV[k] || [];
@@ -260,6 +410,26 @@ function rowInfo(k) {
 }
 const rowNames = r => Object.values(r.by).flat();
 
+/* Determine the primary functional category of a gene row based on the interactions it participates in */
+function pickRowCat(k, activeCols) {
+  const counts = {};
+  // Prefer interactions where the gene is on the acting (src) side, or checkpoint/replication/SAC roles
+  const prio = { chk: 3, rep: 2.5, sac: 2.5, exit: 2.5, deg: 2.2, tx: 2.0, cdk: 1.5 };
+  activeCols.forEach(x => {
+    const rk = rowKey(x);
+    const inSrc = x.src.some(g => rk(g) === k);
+    const inTgt = x.tgt.some(g => rk(g) === k);
+    if (inSrc || inTgt) {
+      counts[x.cat] = (counts[x.cat] || 0) + (inSrc ? 1.5 : 1.0) * (prio[x.cat] || 1);
+    }
+  });
+  let best = 'cdk', bestScore = -1;
+  for (const c of CAT_ORDER) {
+    if ((counts[c] || 0) > bestScore) { bestScore = counts[c] || 0; best = c; }
+  }
+  return best;
+}
+
 let cols = [], rows = [], rowIdx = {};
 function layout() {
   const pool = IX.filter(x => {
@@ -269,12 +439,47 @@ function layout() {
     if (state.cf === 'other') return x.sp !== 'hsa' && !x.cp.length;
     return true;
   });
-  cols = pool.map((x, i) => [x, i]).sort((a, b) => a[0].ph[0] - b[0].ph[0] || ORGS.indexOf(a[0].sp) - ORGS.indexOf(b[0].sp) || a[1] - b[1]).map(a => a[0]);
+  // Sort columns by phase_from, then by functional category order (so functional annotation bands are contiguous within each phase), then organism, then original order
+  cols = pool.map((x, i) => [x, i]).sort((a, b) =>
+    a[0].ph[0] - b[0].ph[0] ||
+    CAT_ORDER.indexOf(a[0].cat) - CAT_ORDER.indexOf(b[0].cat) ||
+    ORGS.indexOf(a[0].sp) - ORGS.indexOf(b[0].sp) ||
+    a[1] - b[1]
+  ).map(a => a[0]);
+
   const span = {};
   cols.forEach((x, c) => rowKeys(x).forEach(k => { (span[k] ||= [c, c])[1] = c; }));
-  cols.forEach(x => { if (x.ph[1] > x.ph[0]) { let last = 0; cols.forEach((y, c) => { if (y.ph[0] <= x.ph[1]) last = c; }); rowKeys(x).forEach(k => { span[k][1] = Math.max(span[k][1], last); }); } });
-  rows = Object.keys(span).sort((a, b) => span[a][0] - span[b][0] || span[a][1] - span[b][1]).map(k => ({ k, from: span[k][0], to: span[k][1], ...rowInfo(k) }));
-  rowIdx = {}; rows.forEach((r, i) => { rowIdx[r.k] = i; });
+  cols.forEach(x => {
+    if (x.ph[1] > x.ph[0]) {
+      let last = 0;
+      cols.forEach((y, c) => { if (y.ph[0] <= x.ph[1]) last = c; });
+      rowKeys(x).forEach(k => { span[k][1] = Math.max(span[k][1], last); });
+    }
+  });
+
+  const rowList = Object.keys(span).map(k => ({
+    k,
+    from: span[k][0],
+    to: span[k][1],
+    cat: pickRowCat(k, cols),
+    ...rowInfo(k)
+  }));
+
+  if (state.ro === 'cat') {
+    rowList.sort((a, b) =>
+      CAT_ORDER.indexOf(a.cat) - CAT_ORDER.indexOf(b.cat) ||
+      a.from - b.from ||
+      a.to - b.to
+    );
+  } else {
+    rowList.sort((a, b) => a.from - b.from || a.to - b.to);
+  }
+  rows = rowList;
+  rowIdx = {};
+  rows.forEach((r, i) => {
+    r.catStart = state.ro === 'cat' && (i === 0 || rows[i - 1].cat !== r.cat);
+    rowIdx[r.k] = i;
+  });
 }
 
 function mark(g, cls, x, y) {
@@ -290,15 +495,27 @@ const sw = (inner, w = 12) => `<svg width="${w}" height="12">${inner}</svg>`;
 function chrome() {
   const L = t(), cmp = state.mode === 'cmp';
   document.documentElement.lang = state.lang;
-  document.querySelectorAll('[data-t]').forEach(n => { n.textContent = L[n.dataset.t]; });
+  document.querySelectorAll('[data-t]').forEach(n => { if (L[n.dataset.t]) n.textContent = L[n.dataset.t]; });
   document.getElementById('lede').hidden = !state.lede;
   document.getElementById('ledeBtn').setAttribute('aria-expanded', state.lede);
+  document.getElementById('detail').classList.toggle('wide', state.wide);
   const q = document.getElementById('q'); q.placeholder = L.search; q.setAttribute('aria-label', L.search);
   document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === state.lang));
   const modes = [...SINGLE.filter(o => D.orgs[o]), ...(OTHERS.length ? ['cmp'] : [])];
   document.getElementById('modes').innerHTML = modes.map(m => `<button type="button" data-mode="${m}" aria-pressed="${m === state.mode}">${m === 'cmp' ? L.cmpMode : orgName(m)}</button>`).join('');
   document.querySelectorAll('[data-cf]').forEach(b => b.setAttribute('aria-pressed', b.dataset.cf === state.cf));
+  document.querySelectorAll('[data-ro]').forEach(b => b.setAttribute('aria-pressed', b.dataset.ro === state.ro));
+  document.querySelectorAll('[data-era]').forEach(b => b.setAttribute('aria-pressed', b.dataset.era === state.era));
   document.getElementById('cmpf').hidden = !cmp;
+
+  // Functional category filter bar
+  const catBtns = ['all', ...CAT_ORDER].map(c => {
+    const dot = c === 'all' ? '' : `<span class="cat-dot" style="background:${catColor(c)}"></span>`;
+    const lbl = c === 'all' ? L.cats.all : L.catsShort[c];
+    return `<button type="button" data-cat="${c}" aria-pressed="${state.cat === c}" title="${esc(L.cats[c])}">${dot}${esc(lbl)}</button>`;
+  }).join('');
+  document.getElementById('catf').innerHTML = catBtns;
+
   const item = (svg, text) => `<span>${svg}${esc(text)}</span>`;
   document.getElementById('legend').innerHTML = [
     item(sw('<circle cx="6" cy="6" r="4" fill="var(--ink)"/>'), L.lgSrc),
@@ -310,36 +527,103 @@ function chrome() {
     ...(cmp ? [...ORGS.map(o => item(sw(`<rect x="1" y="1" width="12" height="10" rx="2" fill="${orgColor(o)}"/>`, 14), L.lgIx(orgName(o)))),
       item(sw('<rect x="1.5" y="1.5" width="11" height="9" rx="2" fill="none" stroke="var(--muted)"/>', 14), L.lgOnly)] : [])
   ].join('');
+  document.getElementById('cornerTrack1').textContent = L.cornerTracks[0];
+  document.getElementById('cornerTrack2').textContent = L.cornerTracks[1];
   document.getElementById('cornerA').textContent = L.cornerGene(orgName(cmp ? 'hsa' : state.mode));
   document.getElementById('cornerB').textContent = cmp ? L.cornerOther : (state.mode === 'hsa' ? L.cornerOt : L.cornerHs);
-  document.getElementById('scroller').style.setProperty('--labw', cmp ? '236px' : '180px');
+  document.getElementById('scroller').style.setProperty('--labw', cmp ? '286px' : '246px');
 }
 
 function render() {
   const L = t(), cmp = state.mode === 'cmp';
   chrome();
   layout();
-  const HH = cmp ? 58 : 42;
+  // Header tracks:
+  // Track 1 (y: 0..32): Phase bands
+  // Track 2 (y: 32..52): Functional Module Annotation bands (20px)
+  // Track 3 (y: 52..68): Discovery Year track (16px)
+  // Track 4 (y: 68..84, Compare only): Organism square indicators (16px)
+  const HH = cmp ? 84 : 68;
   const W = Math.max(cols.length * CW + 10, 200), H = rows.length * RH + 6;
-  const groups = []; cols.forEach((x, c) => { const p = x.ph[0]; const g = groups[groups.length - 1]; if (g && g.p === p) g.to = c; else groups.push({ p, from: c, to: c }); });
+
+  // Group contiguous columns by phase
+  const groups = [];
+  cols.forEach((x, c) => {
+    const p = x.ph[0];
+    const g = groups[groups.length - 1];
+    if (g && g.p === p) g.to = c;
+    else groups.push({ p, from: c, to: c });
+  });
+
+  // Group contiguous columns by (phase, functional category) for Tier 2 annotation track
+  const catGroups = [];
+  cols.forEach((x, c) => {
+    const last = catGroups[catGroups.length - 1];
+    if (last && last.p === x.ph[0] && last.cat === x.cat) last.to = c;
+    else catGroups.push({ p: x.ph[0], cat: x.cat, from: c, to: c });
+  });
 
   const head = el('svg', { width: W, height: HH, role: 'img', 'aria-label': L.headAria });
+
+  // Tier 1: Phase bands
   groups.forEach((g, i) => {
     const x0 = g.from * CW, w = (g.to - g.from + 1) * CW;
-    el('rect', { x: x0, y: 0, width: w, height: HH, fill: i % 2 ? 'var(--band-b)' : 'var(--band-a)' }, head);
-    if (w >= 60) {
-      el('text', { x: x0 + 6, y: 17, 'font-size': 12, 'font-weight': 600 }, head).textContent = phase(g.p);
-      el('text', { x: x0 + 6, y: 32, 'font-size': 10.5, style: 'fill:var(--muted)' }, head).textContent = L.count(g.to - g.from + 1);
+    el('rect', { x: x0, y: 0, width: w, height: 32, fill: i % 2 ? 'var(--band-b)' : 'var(--band-a)' }, head);
+    if (i > 0) el('line', { x1: x0, x2: x0, y1: 0, y2: HH, stroke: 'var(--line)', 'stroke-width': 1 }, head);
+    if (w >= 54) {
+      el('text', { x: x0 + 6, y: 15, 'font-size': 11.5, 'font-weight': 600 }, head).textContent = phase(g.p);
+      el('text', { x: x0 + 6, y: 27, 'font-size': 10, style: 'fill:var(--muted)' }, head).textContent = L.count(g.to - g.from + 1);
     }
   });
-  if (cmp) cols.forEach((x, c) => {
-    const cx = c * CW + CW / 2, col = orgColor(x.sp);
-    el('rect', { x: cx - 6.5, y: 40, width: 13, height: 13, rx: 2.5, style: `fill:${x.cp.length ? col : 'var(--panel)'};stroke:${col}`, 'stroke-width': 1.2 }, head);
+
+  // Tier 2: Functional Module Annotation Track (y: 32..52)
+  catGroups.forEach(cg => {
+    const x0 = cg.from * CW, w = (cg.to - cg.from + 1) * CW, col = catColor(cg.cat);
+    const bg = el('g', { class: 'cat-band', 'data-cat': cg.cat }, head);
+    el('rect', { class: 'band-bg', x: x0 + 0.5, y: 32, width: Math.max(w - 1, 1), height: 19, fill: col, 'fill-opacity': state.cat === cg.cat ? 0.32 : 0.14 }, bg);
+    el('rect', { x: x0 + 0.5, y: 32, width: Math.max(w - 1, 1), height: 3, fill: col }, bg);
+    const shortLbl = L.catsShort[cg.cat] || cg.cat;
+    if (w >= 36) {
+      const tx = el('text', { x: x0 + 4, y: 46, 'font-size': 10, 'font-weight': 600, style: `fill:${col}` }, bg);
+      tx.textContent = w < 65 ? shortLbl.slice(0, 4) : shortLbl;
+    }
+    el('title', {}, bg).textContent = `${phase(cg.p)} — ${L.cats[cg.cat]} (${L.count(cg.to - cg.from + 1)})`;
   });
 
+  // Tier 3: Discovery Year Track (y: 52..68)
+  el('line', { x1: 0, x2: W, y1: 52, y2: 52, stroke: 'var(--line)', 'stroke-width': 0.7 }, head);
+  cols.forEach((x, c) => {
+    const cx = c * CW + CW / 2, yr = x.year;
+    if (yr) {
+      const ec = eraColor(yr);
+      el('circle', { cx, cy: 56.5, r: 2.4, fill: ec }, head);
+      const y2 = String(yr).slice(2);
+      const tEl = el('text', { x: cx, y: 66, 'font-size': 8.5, 'text-anchor': 'middle', style: `fill:${ec};font-family:var(--mono)` }, head);
+      tEl.textContent = `'${y2}`;
+    }
+  });
+
+  // Tier 4: Organism indicator squares in Compare mode (y: 68..84)
+  if (cmp) {
+    el('line', { x1: 0, x2: W, y1: 68, y2: 68, stroke: 'var(--line)', 'stroke-width': 0.7 }, head);
+    cols.forEach((x, c) => {
+      const cx = c * CW + CW / 2, col = orgColor(x.sp);
+      el('rect', { x: cx - 6, y: 70, width: 12, height: 11, rx: 2.5, style: `fill:${x.cp.length ? col : 'var(--panel)'};stroke:${col}`, 'stroke-width': 1.2 }, head);
+    });
+  }
+
+  // Body matrix
   const body = el('svg', { width: W, height: H, role: 'img', 'aria-label': L.bodyAria });
   groups.forEach((g, i) => el('rect', { x: g.from * CW, y: 0, width: (g.to - g.from + 1) * CW, height: H, fill: i % 2 ? 'var(--band-b)' : 'var(--band-a)' }, body));
-  rows.forEach((r, i) => el('rect', { x: r.from * CW + 3, y: i * RH + RH / 2 - 3.5, width: (r.to - r.from) * CW + CW - 6, height: 7, rx: 3.5, fill: 'var(--bar)' }, body));
+
+  // Subtle horizontal divider lines when rows are grouped by functional cluster
+  rows.forEach((r, i) => {
+    if (r.catStart && i > 0) {
+      el('line', { x1: 0, x2: W, y1: i * RH, y2: i * RH, stroke: 'var(--line)', 'stroke-width': 1, 'stroke-dasharray': '3,3' }, body);
+    }
+    el('rect', { x: r.from * CW + 3, y: i * RH + RH / 2 - 3.5, width: (r.to - r.from) * CW + CW - 6, height: 7, rx: 3.5, fill: 'var(--bar)' }, body);
+  });
+
   cols.forEach((x, c) => {
     const g = el('g', { class: 'col', 'data-id': x.id, tabindex: 0, role: 'button', 'aria-label': colLabel(x) }, body);
     const cx = c * CW + CW / 2, rk = rowKey(x), y = m => rowIdx[rk(m)] * RH + RH / 2, ys = members(x).map(y);
@@ -347,43 +631,191 @@ function render() {
     el('line', { x1: cx, x2: cx, y1: Math.min(...ys), y2: Math.max(...ys), stroke: `var(--${x.cls})`, 'stroke-width': 1.6 }, g);
     x.tgt.forEach(m => mark(g, x.cls, cx, y(m)));
     x.src.forEach(m => el('circle', { cx, cy: y(m), r: 4.2, fill: 'var(--ink)' }, g));
-    el('title', {}, g).textContent = (cmp ? `[${orgName(x.sp)}] ` : '') + colLabel(x);
+    const yrStr = x.year ? ` [${x.year}]` : '';
+    el('title', {}, g).textContent = (cmp ? `[${orgName(x.sp)}] ` : '') + `[${L.catsShort[x.cat]}] ` + colLabel(x) + yrStr;
   });
 
   document.getElementById('colhead').replaceChildren(head);
   document.getElementById('body').replaceChildren(body);
-  document.getElementById('rowlabs').innerHTML = rows.map(r =>
-    `<button type="button" class="rowlab" data-k="${esc(r.k)}">${cmp ? `<span class="sp">${ORGS.map(o => `<i${r.by[o] ? ` style="background:${orgColor(o)}"` : ''}></i>`).join('')}</span>` : ''}${r.dz ? '<span class="dz"></span>' : ''}<span class="nm">${esc(r.name)}</span><span class="hs">${esc(r.sub)}</span></button>`).join('');
+  document.getElementById('rowlabs').innerHTML = rows.map(r => {
+    const cCol = catColor(r.cat);
+    const catBadge = r.catStart ? `<span class="cat-tag" style="background:${cCol}" title="${esc(L.cats[r.cat])}">${esc(L.catsShort[r.cat].slice(0, 4))}</span>` : '';
+    return `<button type="button" class="rowlab${r.catStart ? ' cat-start' : ''}" data-k="${esc(r.k)}" style="border-left-color:${cCol}" title="${esc(r.name)} — ${esc(L.cats[r.cat])}">${cmp ? `<span class="sp">${ORGS.map(o => `<i${r.by[o] ? ` style="background:${orgColor(o)}"` : ''}></i>`).join('')}</span>` : ''}${r.dz ? '<span class="dz"></span>' : ''}<span class="nm">${esc(r.name)}</span>${catBadge}<span class="hs">${esc(r.sub)}</span></button>`;
+  }).join('');
   paint();
+}
+
+function colMatchesFilters(x) {
+  if (state.cat !== 'all' && x.cat !== state.cat) return false;
+  if (state.era !== 'all' && eraBucket(x.year) !== state.era) return false;
+  return true;
 }
 
 function paint() {
   const s = state.sel, q = state.q.trim().toUpperCase();
   const selIx = s && s.kind === 'ix' ? BYID[s.id] : null;
+  const activeRowKeys = new Set();
+
   document.querySelectorAll('.col').forEach(n => {
     const x = BYID[n.dataset.id];
-    n.classList.toggle('dim', !!s && s.kind === 'row' && !rowKeys(x).includes(s.id));
+    const rowDim = !!s && s.kind === 'row' && !rowKeys(x).includes(s.id);
+    const filterDim = !colMatchesFilters(x);
+    const isDim = rowDim || filterDim;
+    n.classList.toggle('dim', isDim);
     n.classList.toggle('sel', !!selIx && selIx.id === x.id);
     n.classList.toggle('cp', !!selIx && selIx.cp.includes(x.id));
+    if (!filterDim) rowKeys(x).forEach(k => activeRowKeys.add(k));
   });
+
   const hot = selIx ? new Set(rowKeys(selIx)) : new Set();
   document.querySelectorAll('.rowlab').forEach(n => {
     const r = rows[rowIdx[n.dataset.k]];
+    const filterDim = (state.cat !== 'all' || state.era !== 'all') && !activeRowKeys.has(r.k);
     n.classList.toggle('sel', !!s && s.kind === 'row' && s.id === r.k);
     n.classList.toggle('hot', hot.has(r.k));
-    n.classList.toggle('match', !!q && [...rowNames(r), r.sub].some(v => v.toUpperCase().includes(q)));
+    n.classList.toggle('dim', filterDim);
+    n.classList.toggle('match', !!q && [...rowNames(r), r.sub, r.cat, t().cats[r.cat]].some(v => String(v).toUpperCase().includes(q)));
   });
   detail();
 }
 
+/* ---- Evidence Markdown Parser & Renderer ---- */
+function formatInlineMd(str) {
+  return esc(str)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+function renderEvidenceMd(md, activeIxId) {
+  const lines = md.replace(/\r\n/g, '\n').split('\n');
+  let title = '';
+  const meta = [];
+  const sections = [];
+  let curSec = null;
+  let curSub = null;
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (!title && line.startsWith('# ')) {
+      title = line.slice(2).trim();
+      continue;
+    }
+    if (!curSec && line.startsWith('- **')) {
+      const m = line.match(/^- \*\*([^*]+)\*\*:\s*(.+)$/);
+      if (m) meta.push({ k: m[1].trim(), v: m[2].trim() });
+      continue;
+    }
+    if (line.startsWith('## ')) {
+      curSec = { title: line.slice(3).trim(), lines: [], subs: [] };
+      sections.push(curSec);
+      curSub = null;
+      continue;
+    }
+    if (line.startsWith('### ')) {
+      const subTitle = line.slice(4).trim();
+      const idMatch = subTitle.match(/`([A-Z]+-CC-[A-Z0-9]+)`/);
+      curSub = { title: subTitle, ixId: idMatch ? idMatch[1] : null, lines: [] };
+      if (!curSec) { curSec = { title: '', lines: [], subs: [] }; sections.push(curSec); }
+      curSec.subs.push(curSub);
+      continue;
+    }
+    if (curSub) curSub.lines.push(line);
+    else if (curSec) curSec.lines.push(line);
+  }
+
+  let html = '';
+  if (title) html += `<h4 class="ev-paper-title">${formatInlineMd(title)}</h4>`;
+
+  // Render key metadata items (Authors, Journal, DOI)
+  const shownMeta = meta.filter(m => ['Authors', 'Journal', 'DOI'].includes(m.k));
+  if (shownMeta.length) {
+    html += `<div class="ev-meta-grid">${shownMeta.map(m => {
+      if (m.k === 'DOI' && m.v && !m.v.startsWith('http')) {
+        const cleanDoi = m.v.replace(/^doi:\s*/i, '');
+        return `<span><strong>DOI:</strong> <a href="https://doi.org/${esc(cleanDoi)}" target="_blank" rel="noopener">${esc(cleanDoi)}</a></span>`;
+      }
+      return `<span><strong>${esc(m.k)}:</strong> ${formatInlineMd(m.v)}</span>`;
+    }).join('')}</div>`;
+  }
+
+  for (const sec of sections) {
+    if (sec.title) html += `<div class="ev-sec-title">${esc(sec.title)}</div>`;
+    const bodyText = sec.lines.map(l => l.trim()).filter(Boolean).join(' ');
+    if (bodyText) html += `<div class="ev-summary">${formatInlineMd(bodyText)}</div>`;
+
+    for (const sub of sec.subs) {
+      const isActive = activeIxId && sub.ixId === activeIxId;
+      html += `<div class="ev-ix-block${isActive ? ' active-ix' : ''}">`;
+      html += `<div class="ev-ix-head">${formatInlineMd(sub.title)}</div>`;
+      const items = [];
+      for (const l of sub.lines) {
+        const tLine = l.trim();
+        if (!tLine) continue;
+        if (tLine.startsWith('>')) {
+          const q = tLine.replace(/^>\s*/, '').trim();
+          if (q) items.push({ kind: 'quote', text: q });
+        } else if (tLine.startsWith('- **')) {
+          const fm = tLine.match(/^- \*\*([^*]+)\*\*:\s*(.*)$/);
+          if (fm) {
+            const label = fm[1].trim(), val = fm[2].trim();
+            if (/TSV記載内容|TSV Description/i.test(label) && !val) continue;
+            if (/抽出文|Extracted Phrases/i.test(label) && !val) continue;
+            if (val) items.push({ kind: 'field', label, val });
+          }
+        }
+      }
+      for (const it of items) {
+        if (it.kind === 'quote') {
+          html += `<blockquote class="ev-quote">${formatInlineMd(it.text)}</blockquote>`;
+        } else {
+          html += `<div class="ev-field"><span class="ev-field-label">${esc(it.label)}:</span> ${formatInlineMd(it.val)}</div>`;
+        }
+      }
+      html += `</div>`;
+    }
+  }
+  return html;
+}
+
+function loadEvidence(pmid, container, activeIxId) {
+  const L = t();
+  const suffix = state.lang === 'ja' ? '_ja.md' : '.md';
+  const cacheKey = `${pmid}_${state.lang}`;
+  if (EV_CACHE[cacheKey]) {
+    container.innerHTML = renderEvidenceMd(EV_CACHE[cacheKey], activeIxId);
+    return;
+  }
+  container.innerHTML = `<p class="meta">${esc(L.evLoading)}</p>`;
+  fetch(`evidence/${encodeURIComponent(pmid)}${suffix}`)
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(md => {
+      EV_CACHE[cacheKey] = md;
+      container.innerHTML = renderEvidenceMd(md, activeIxId);
+    })
+    .catch(() => {
+      container.innerHTML = `<p class="meta">${esc(L.evError)}</p>`;
+    });
+}
+
 /* ---- detail pane ---- */
-function refHtml(r) {
+function refHtml(r, ixId, idx) {
   const L = t();
   const href = r.pmid ? `https://pubmed.ncbi.nlm.nih.gov/${r.pmid}/` : (r.url || `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(r.label)}`);
-  const tail = r.pmid ? ` <span class="meta">PMID ${r.pmid}</span>` : (r.url ? '' : ` <span class="meta">${L.searchLink}</span>`);
-  const flag = r.checked ? '' : ` <span class="meta">・${L.unchecked}</span>`;
-  return `<li><a href="${esc(href)}" target="_blank" rel="noopener">${esc(r.label)}</a>${tail}${flag}</li>`;
+  const yrBadge = r.year ? `<span class="yr-badge" style="background:${eraColor(r.year)}">${r.year}</span>` : '';
+  const pmidBtn = r.pmid ? `<a class="pmid-link" href="${esc(href)}" target="_blank" rel="noopener">PMID ${esc(r.pmid)} ↗</a>` : `<a class="pmid-link" href="${esc(href)}" target="_blank" rel="noopener">${L.searchLink} ↗</a>`;
+  const evKey = `${ixId || 'row'}_${r.pmid || idx}`;
+  const isOpen = state.openEv[evKey] !== undefined ? state.openEv[evKey] : true; // Auto-open evidence by default when viewing an interaction
+  const evToggle = r.pmid ? `<button type="button" class="ev-toggle" data-evkey="${esc(evKey)}" data-pmid="${esc(r.pmid)}" data-ix="${esc(ixId || '')}" aria-expanded="${isOpen}">${isOpen ? L.evBtnOpen : L.evBtnShow}</button>` : '';
+  const evBox = r.pmid ? `<div class="ev-box" data-evbox="${esc(evKey)}" data-pmid="${esc(r.pmid)}" data-ix="${esc(ixId || '')}"${isOpen ? '' : ' hidden'}></div>` : '';
+  return `<li class="ref-card">
+    <div class="ref-head">
+      <div class="ref-title-row">${yrBadge}<a class="ref-cite" href="${esc(href)}" target="_blank" rel="noopener">${esc(r.label)}</a></div>
+      <div class="ref-actions">${pmidBtn}${evToggle}</div>
+    </div>
+    ${evBox}
+  </li>`;
 }
+
 const ext = (href, text) => `<a href="${esc(href)}" target="_blank" rel="noopener">${text}</a>`;
 const hsLinks = h => `<div class="links">${ext(`https://www.genenames.org/tools/search/#!/?query=${h}`, 'HGNC')}
   ${ext(`https://www.ncbi.nlm.nih.gov/clinvar/?term=${h}%5Bgene%5D`, 'ClinVar')}
@@ -394,7 +826,7 @@ const hs = h => `<a class="gene" href="${esc(HGNC_LINK_PREFIX + encodeURICompone
 const geneNames = (o, gs, sep) => gs.map(g => (o === 'hsa' ? hs(g) : `<span class="gene">${esc(g)}</span>`)).join(sep);
 const dzHtml = h => (D.disease[h] ? `<p style="margin:3px 0 4px"><span class="dz" style="margin-right:5px"></span>${esc(D.disease[h][state.lang])}</p>` : '');
 const relName = r => (r === 'functional' ? t().func : t().ortho);
-function otherLink(o, g) {   // a gene of a non-human organism, linked to its database
+function otherLink(o, g) {
   const id = (D.orgs[o] && D.orgs[o].genes[g] && D.orgs[o].genes[g].id) || g;
   const href = o === 'sce' ? `https://www.yeastgenome.org/locus/${id}` : `https://www.alliancegenome.org/search?q=${id}`;
   return `${ext(href, `<span class="gene">${esc(g)}</span>`)}${id !== g ? ` <span class="meta">${esc(id)}</span>` : ''}`;
@@ -412,30 +844,44 @@ function otherGeneHtml(o, g) {
 const geneList = (o, gs) => gs.map(g => (o === 'hsa' ? humanGeneHtml(g) : otherGeneHtml(o, g))).join('');
 const phaseText = x => (x.ph[0] === x.ph[1] ? phase(x.ph[0]) : t().range(phase(x.ph[0]), phase(x.ph[1])));
 const orgPill = o => `<span class="pill org" style="background:${orgColor(o)};border-color:${orgColor(o)}">${orgName(o)}</span>`;
-const ixBtn = x => `<li><button type="button" class="ixbtn" data-ix="${x.id}">${orgPill(x.sp)}<span class="gene">${x.src.join('+')}</span> → <span class="gene">${x.tgt.join('+')}</span><br><span class="meta">${phase(x.ph[0])} ・ ${esc(x.type)}</span></button></li>`;
+const catPill = c => `<span class="pill cat" style="background:${catColor(c)}">${esc(t().catsShort[c] || c)}</span>`;
+const yearPill = y => (y ? `<span class="pill year" style="border-color:${eraColor(y)}">${esc(t().discoveredIn(y))}</span>` : '');
+const ixBtn = x => `<li><button type="button" class="ixbtn" data-ix="${x.id}">${orgPill(x.sp)}${catPill(x.cat)}${x.year ? `<span class="pill year">${x.year}</span>` : ''}<span class="gene">${x.src.join('+')}</span> → <span class="gene">${x.tgt.join('+')}</span><br><span class="meta">${phase(x.ph[0])} ・ ${esc(x.module)} ・ ${esc(x.type)}</span></button></li>`;
 
 function detail() {
   const box = document.getElementById('detail'), s = state.sel, L = t();
+  const wideBtn = `<button type="button" class="wide-btn" id="wideBtn">${state.wide ? L.wideClose : L.wideOpen}</button>`;
   const foot = `<p class="note">${L.foot(D.built)}</p>`;
-  if (!s) { box.innerHTML = `<h2>${L.pick}</h2><p class="meta">${L.showing(cols.length, rows.length)}</p>${foot}`; return; }
+  if (!s) {
+    box.innerHTML = `<div class="aside-top"><span class="meta"></span>${wideBtn}</div><h2>${L.pick}</h2><p class="meta">${L.showing(cols.length, rows.length)}</p>${foot}`;
+    return;
+  }
   if (s.kind === 'ix') {
     const x = BYID[s.id];
-    box.innerHTML = `<p class="meta">${x.id} ・ ${esc(x.module)}</p>
+    box.innerHTML = `<div class="aside-top"><p class="meta" style="margin:0">${x.id} ・ ${esc(x.module)}</p>${wideBtn}</div>
       <h2>${geneNames(x.sp, x.src, ' + ')} → ${geneNames(x.sp, x.tgt, ' + ')}</h2>
-      <p style="margin-top:6px">${orgPill(x.sp)}<span class="pill ${x.cls}">${L[x.cls]}</span></p>
+      <p style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 0">${orgPill(x.sp)}${catPill(x.cat)}<span class="pill ${x.cls}">${L[x.cls]}</span>${yearPill(x.year)}</p>
       <p class="meta">${esc(x.type)} ・ ${phaseText(x)}</p>
       <h3>${L.what}</h3><p>${esc(x.desc[state.lang])}</p>
-      <h3>${L.refs}</h3><ul>${x.refs.map(refHtml).join('')}</ul>
+      <h3><span>${L.refs} (${x.refs.length})</span></h3>
+      <ul>${x.refs.map((r, idx) => refHtml(r, x.id, idx)).join('')}</ul>
       <p class="meta" style="margin-top:6px">${L.shown}: ${x.shown.map(orgName).join('、')}</p>
+      <h3>${L.cp(x.sp === 'hsa')}</h3>${x.cp.length ? `<ul>${x.cp.map(id => ixBtn(BYID[id])).join('')}</ul>` : `<p class="meta">${L.noCp}</p>`}
+      <h3>${L.genes}</h3><ul>${geneList(x.sp, members(x))}</ul>
       <h3>${L.status}</h3><p><span class="pill ${x.curation}">${L.manual[x.curation]}</span></p>
       ${x.evidence.length ? `<ul>${x.evidence.map(e => `<li class="meta">${esc(e)}</li>`).join('')}</ul>` : `<p class="meta">${L.noEvidence}</p>`}
-      <h3>${L.cp(x.sp === 'hsa')}</h3>${x.cp.length ? `<ul>${x.cp.map(id => ixBtn(BYID[id])).join('')}</ul>` : `<p class="meta">${L.noCp}</p>`}
-      <h3>${L.genes}</h3><ul>${geneList(x.sp, members(x))}</ul>${foot}`;
+      ${foot}`;
+    // Auto-fetch and render visible evidence boxes
+    box.querySelectorAll('.ev-box:not([hidden])').forEach(elBox => {
+      loadEvidence(elBox.dataset.pmid, elBox, elBox.dataset.ix);
+    });
   } else {
     const r = rows[rowIdx[s.id]], list = cols.filter(x => rowKeys(x).includes(s.id));
     const single = rowNames(r).length === 1;
     const title = ORGS.filter(o => r.by[o]).map(o => geneNames(o, r.by[o], '/')).join(' <span class="meta">・</span> ');
-    box.innerHTML = `<p class="meta">${single ? L.gene : L.group}</p><h2>${title}</h2>
+    box.innerHTML = `<div class="aside-top"><p class="meta" style="margin:0">${single ? L.gene : L.group}</p>${wideBtn}</div>
+      <h2>${title}</h2>
+      <p style="margin-top:6px">${catPill(r.cat)}</p>
       ${ORGS.filter(o => r.by[o]).map(o => `<h3>${orgName(o)}</h3><ul>${geneList(o, r.by[o])}</ul>`).join('')}
       <h3>${L.involved(list.length)}</h3><ul>${list.map(ixBtn).join('')}</ul>${foot}`;
   }
@@ -460,8 +906,39 @@ function keepSelection() {
 function wire() {
   document.getElementById('body').addEventListener('click', e => { const c = e.target.closest('.col'); if (c) select('ix', c.dataset.id); });
   document.getElementById('body').addEventListener('keydown', e => { const c = e.target.closest('.col'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); select('ix', c.dataset.id); } });
+  document.getElementById('colhead').addEventListener('click', e => {
+    const cb = e.target.closest('.cat-band');
+    if (cb) {
+      const cat = cb.dataset.cat;
+      state.cat = state.cat === cat ? 'all' : cat;
+      render();
+    }
+  });
   document.getElementById('rowlabs').addEventListener('click', e => { const b = e.target.closest('.rowlab'); if (b) select('row', b.dataset.k); });
   document.getElementById('detail').addEventListener('click', e => {
+    const wb = e.target.closest('#wideBtn');
+    if (wb) {
+      state.wide = !state.wide;
+      try { localStorage.setItem('cc-wide', state.wide ? 'on' : 'off'); } catch (err) {}
+      document.getElementById('detail').classList.toggle('wide', state.wide);
+      wb.textContent = state.wide ? t().wideClose : t().wideOpen;
+      return;
+    }
+    const evBtn = e.target.closest('.ev-toggle');
+    if (evBtn) {
+      const key = evBtn.dataset.evkey;
+      const box = document.querySelector(`.ev-box[data-evbox="${CSS.escape(key)}"]`);
+      if (!box) return;
+      const nowOpen = box.hidden;
+      box.hidden = !nowOpen;
+      state.openEv[key] = nowOpen;
+      evBtn.setAttribute('aria-expanded', nowOpen);
+      evBtn.textContent = nowOpen ? t().evBtnOpen : t().evBtnShow;
+      if (nowOpen && !box.innerHTML.trim()) {
+        loadEvidence(evBtn.dataset.pmid, box, evBtn.dataset.ix);
+      }
+      return;
+    }
     const b = e.target.closest('.ixbtn'); if (!b) return;
     const x = BYID[b.dataset.ix];
     if (!cols.includes(x)) { state.mode = 'cmp'; state.cf = 'all'; state.sel = null; render(); }
@@ -481,6 +958,21 @@ function wire() {
     if (state.sel) scrollTo('ix', state.sel.id);
   });
   document.querySelectorAll('[data-cf]').forEach(b => b.addEventListener('click', () => { state.cf = b.dataset.cf; layout(); keepSelection(); render(); }));
+  document.querySelectorAll('[data-ro]').forEach(b => b.addEventListener('click', () => {
+    state.ro = b.dataset.ro;
+    const sc = document.getElementById('scroller'), x = sc.scrollLeft;
+    render(); sc.scrollLeft = x; sc.scrollTop = 0;
+  }));
+  document.querySelectorAll('[data-era]').forEach(b => b.addEventListener('click', () => {
+    state.era = state.era === b.dataset.era && b.dataset.era !== 'all' ? 'all' : b.dataset.era;
+    chrome(); paint();
+  }));
+  document.getElementById('catf').addEventListener('click', e => {
+    const b = e.target.closest('[data-cat]'); if (!b) return;
+    const c = b.dataset.cat;
+    state.cat = state.cat === c && c !== 'all' ? 'all' : c;
+    render();
+  });
   document.getElementById('ledeBtn').addEventListener('click', () => {
     state.lede = !state.lede;
     try { localStorage.setItem('cc-lede', state.lede ? 'on' : 'off'); } catch (e) {}

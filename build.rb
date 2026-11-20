@@ -59,6 +59,29 @@ def classify(type)
   end
 end
 
+def classify_cat(mod, src, tgt, type)
+  all = (src + tgt).join('|')
+  if mod =~ /DNA damage|Replication stress|S phase checkpoint|Stress \(HOG\)|morphogenesis checkpoint/i ||
+     (src.include?('CDKN1A') && tgt.include?('PCNA'))
+    'chk'
+  elsif mod =~ /\AM \(SAC|\AM \(centromere|\AM\z/ || all =~ /STAG2|RAD21|MCD1|ESPL1|ESP1|PTTG1|PDS1/
+    'sac'
+  elsif mod =~ /Mitotic exit|SPOC/
+    'exit'
+  elsif all =~ /MCM[2467]|MCM10|ORC|CDT1|TAH11|GMNN|CDC7|DBF4|TICRR|MTBP|TOPBP1|DONSON|GINS|SLD2|SLD3|SLD7|RIF1/ &&
+        mod !~ /checkpoint/i
+    'rep'
+  elsif mod =~ /APC\/C/ || type =~ /ubiquitination|proteolysis/ ||
+        all =~ /SKP2|FBXW7|AMBRA1|DTL|FBXO5|CCNF|ACM1|CDC4\b|GRR1|CDC53/
+    'deg'
+  elsif mod =~ /DREAM|MMB|M\/G1|PHO/ || type =~ /expression|repression/ ||
+        all =~ /E2F|TFDP1|RBL2|LIN52|LIN9|MYBL2|FOXM1|SWI4|SWI6|MBP1|WHI5|WHI7|STB1|MSA1|NRM1|FKH2|NDD1|MCM1\b|YOX1|SWI5|MYC/
+    'tx'
+  else
+    'cdk'
+  end
+end
+
 def parse_refs(text)
   text.split(' | ').map(&:strip).reject(&:empty?).map do |entry|
     label, tag = entry.match(/\A(.*?)(?:\s*<([^<>]+)>)?\z/).captures
@@ -69,6 +92,12 @@ def parse_refs(text)
     when 'checked' then ref[:checked] = true
     when nil then ref[:checked] = false
     else raise "unknown reference tag <#{tag}>"
+    end
+    yr = label.sub(/:\d+(?:-\d+)?/, '')[/\b(19[89]\d|20[0-2]\d)\b/, 1]
+    ref[:year] = yr.to_i if yr
+    if ref[:pmid]
+      ev_path = File.join(DIR, 'evidence', "#{ref[:pmid]}.md")
+      ref[:ev] = true if File.exist?(ev_path)
     end
     ref
   end
@@ -110,8 +139,10 @@ files.each do |path|
     seen[r['id']] = at
     src.zip(sid).each { |g, i| genes[g] ||= { id: i } }
     tgt.zip(tid).each { |g, i| genes[g] ||= { id: i } }
-    { id: r['id'], module: r['module'], src: src, tgt: tgt, type: r['interaction_type'], cls: classify(r['interaction_type']),
-      desc: { ja: r['description_ja'], en: r['description_en'] }, refs: refs, shown: shown, ph: [from, to],
+    { id: r['id'], module: r['module'], cat: classify_cat(r['module'], src, tgt, r['interaction_type']),
+      src: src, tgt: tgt, type: r['interaction_type'], cls: classify(r['interaction_type']),
+      desc: { ja: r['description_ja'], en: r['description_en'] }, refs: refs,
+      year: refs.filter_map { |q| q[:year] }.min, shown: shown, ph: [from, to],
       evidence: r['evidence'].split(' | ').map(&:strip).reject(&:empty?), curation: r['curation'] }
   end
   orgs[org] = { genes: genes, ix: ix }
